@@ -5,12 +5,13 @@
 #                                                    +:+ +:+         +:+       #
 #    By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+          #
 #                                                +#+#+#+#+#+   +#+             #
-#    Created: 2026/07/07 20:02:53 by sfurst           #+#    #+#               #
-#    Updated: 2026/07/07 20:43:46 by sfurst          ###   ########.fr         #
+#    Created: 2026/07/08 19:41:38 by sfurst           #+#    #+#               #
+#    Updated: 2026/07/08 19:51:43 by sfurst          ###   ########.fr         #
 #                                                                              #
 # **************************************************************************** #
 
 NAME		= codexion
+
 CC		= cc
 CFLAGS		= -Wall -Wextra -Werror
 CPPFLAGS	= -MMD -MP
@@ -22,7 +23,8 @@ RM		= rm -f
 # Optional libs: no configured optional library directory detected.
 LIBS		=
 
-MAKEFLAGS += -j$(shell nproc)
+JOBS ?= $(shell nproc)
+MAKEFLAGS += -j $(JOBS) -l $(JOBS)
 
 ifeq ($(DEBUG),1)
 CFLAGS		+= -g3
@@ -30,13 +32,17 @@ CPPFLAGS	+= -DDEBUG=1
 endif
 
 SRC_DIR		= src
-OBJ_DIR		= obj
-
 SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/main.c \
+			  $(SRC_DIR)/sim/coder_init.c \
+			  $(SRC_DIR)/sim/dongle_init.c \
+			  $(SRC_DIR)/sim/heap_init.c \
+			  $(SRC_DIR)/sim/init_simulation.c \
+			  $(SRC_DIR)/sim/sim.c \
+			  $(SRC_DIR)/sim/sim_cleanup.c \
 			  $(SRC_DIR)/utils/utils.c
 
-OBJS		= $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJS		= $(SRCS:.c=.o)
 DEPS		= $(OBJS:.o=.d)
 
 all: $(NAME)
@@ -44,12 +50,11 @@ all: $(NAME)
 $(NAME): $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(LDLIBS) -o $(NAME)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(dir $@)
+%.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 clean:
-	$(RM) -r $(OBJ_DIR)
+	$(RM) $(OBJS) $(DEPS)
 
 fclean: clean
 	$(RM) $(NAME)
