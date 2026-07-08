@@ -17,7 +17,12 @@ CFLAGS		= -Wall -Wextra -Werror
 CPPFLAGS	= -MMD -MP
 LDFLAGS		=
 LDLIBS		=
-DEBUG		?= 0
+DEBUG		?= 1
+
+ifeq ($(DEBUG),1)
+CFLAGS		+= -g3
+CPPFLAGS	+= -DDEBUG=1
+endif
 RM		= rm -f
 
 # Optional libs: no configured optional library directory detected.
@@ -36,10 +41,13 @@ SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/main.c \
 			  $(SRC_DIR)/sim/coder_init.c \
 			  $(SRC_DIR)/sim/dongle_init.c \
+			  $(SRC_DIR)/sim/fails.c \
 			  $(SRC_DIR)/sim/heap_init.c \
 			  $(SRC_DIR)/sim/init_simulation.c \
 			  $(SRC_DIR)/sim/sim.c \
 			  $(SRC_DIR)/sim/sim_cleanup.c \
+			  $(SRC_DIR)/sim/thread_join.c \
+			  $(SRC_DIR)/sim/thread_start.c \
 			  $(SRC_DIR)/utils/utils.c
 
 OBJS		= $(SRCS:.c=.o)

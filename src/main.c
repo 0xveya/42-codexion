@@ -6,28 +6,21 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/07 20:14:15 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/08 21:57:42 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/08 22:40:07 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/args.h"
 #include "../include/sim.h"
+#include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-void	debug_print_app(t_app *app)
+static void	debug_print_app(t_app *app)
 {
 	uint32_t	i;
 
-	printf("=== args ===\n");
-	printf("number_of_coders: %u\n", app->args.number_of_coders);
-	printf("time_to_burnout: %lu\n", app->args.time_to_burnout);
-	printf("time_to_compile: %lu\n", app->args.time_to_compile);
-	printf("time_to_debug: %lu\n", app->args.time_to_debug);
-	printf("time_to_refactor: %lu\n", app->args.time_to_refactor);
-	printf("compiles_required: %u\n", app->args.number_of_compiles_required);
-	printf("dongle_cooldown: %lu\n", app->args.dongle_cooldown);
-	printf("scheduler: %s\n",
-		app->args.scheduler.policy == scheduler_fifo ? "fifo" : "edf");
 	printf("=== dongles (%u) ===\n", app->args.number_of_coders);
 	i = 0;
 	while (i < app->args.number_of_coders)
@@ -45,25 +38,61 @@ void	debug_print_app(t_app *app)
 			(void *)app->coders[i].left, (void *)app->coders[i].right);
 		i++;
 	}
-	printf("=== heap ===\n");
-	printf("size=%u capacity=%u data=%p\n", app->sched_heap.size,
-		app->sched_heap.capacity, (void *)app->sched_heap.data);
+	printf("=== heap === size=%u capacity=%u\n", app->sched_heap.size,
+		app->sched_heap.capacity);
+}
+
+static void	cleanup_app(t_app *app)
+{
+	pthread_mutex_destroy(&app->state_mutex);
+	pthread_mutex_destroy(&app->log_mutex);
+	free_coders(app->coders, app->args.number_of_coders);
+	free_dongles(app->dongles, app->args.number_of_coders);
+	free_heap(&app->sched_heap);
+	free(app);
+}
+
+static void	stop_simulation(t_app *app)
+{
+	pthread_mutex_lock(&app->state_mutex);
+	app->simulation_stop = true;
+	pthread_mutex_unlock(&app->state_mutex);
 }
 
 int	main(int argc, char *argv[])
 {
 	t_parse_result	res;
 	t_init_result	init_res;
+	t_start_result	start_res;
+	t_app			*app;
 
 	res = parse_arguments(argc, argv);
 	if (res.status == parse_err)
 	{
-		return (fprintf(stderr, "%s\n", res.data.error_msg), 1);
+		fprintf(stderr, "%s\n", res.data.error_msg);
+		return (1);
 	}
 	init_res = init_simulation(&res.data.success);
 	if (init_res.status == init_err)
-		return (fprintf(stderr, "%s\n", init_res.data.error_msg), 1);
-	debug_print_app(&init_res.data.success);
-	printf("success initing i guess\n");
+	{
+		fprintf(stderr, "%s\n", init_res.data.error_msg);
+		return (1);
+	}
+	app = init_res.data.success;
+	debug_print_app(app);
+	start_res = start_simulation(app);
+	if (start_res.status == sim_start_err)
+	{
+		fprintf(stderr, "%s\n", start_res.data.error_msg);
+		cleanup_app(app);
+		return (1);
+	}
+	printf("threads started, letting sim run briefly...\n");
+	sleep(1);
+	stop_simulation(app);
+	join_simulation(app);
+	printf("threads joined cleanly\n");
+	cleanup_app(app);
+	printf("cleanup done\n");
 	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:48:40 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/08 21:44:17 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/08 22:30:51 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ typedef enum e_init_status
 
 typedef union u_init_data
 {
-	t_app					success;
+	t_app					*success;
 	const char				*error_msg;
 }							t_init_data;
 
@@ -143,5 +143,28 @@ void						free_coders(t_coder *coders, uint32_t count);
 void						free_dongles(t_dongle *dongles, uint32_t count);
 void						free_heap(t_heap *heap);
 t_init_result				init_simulation(const t_args *args);
+
+typedef enum e_start_status
+{
+	sim_start_ok,
+	sim_start_err
+}							t_start_status;
+
+typedef union u_start_data
+{
+	int						dummy;
+	const char				*error_msg;
+}							t_start_data;
+
+typedef struct s_start_result
+{
+	t_start_status			status;
+	t_start_data			data;
+}							t_start_result;
+
+void						*coder_routine(void *arg);
+void						join_simulation(t_app *app);
+void						*monitor_routine(void *arg);
+t_start_result				start_simulation(t_app *app);
 
 #endif
