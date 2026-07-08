@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 21:55:10 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/08 22:50:03 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 21:22:21 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@ static t_init_result	init_components(t_app *app)
 {
 	t_dongle_init_result	dongles;
 	t_coder_init_result		coders;
-	t_heap_init_result		heap;
 	t_init_result			result;
 
 	dongles = init_dongles(app->args.number_of_coders);
@@ -28,10 +27,6 @@ static t_init_result	init_components(t_app *app)
 	if (coders.status == coder_init_err)
 		return (init_fail_coders(app, &coders));
 	app->coders = coders.data.success;
-	heap = init_heap(app->args.number_of_coders);
-	if (heap.status == heap_init_err)
-		return (init_fail_heap(app, &heap));
-	app->sched_heap = heap.data.success;
 	result.status = init_ok;
 	return (result);
 }
@@ -66,6 +61,7 @@ t_init_result	init_simulation(const t_args *args)
 	result = init_components(app);
 	if (result.status == init_err)
 		return (result);
+	pthread_cond_init(&app->stop_cond, NULL);
 	link_dongles(app);
 	result.status = init_ok;
 	result.data.success = app;

@@ -6,7 +6,7 @@
 #    By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+          #
 #                                                +#+#+#+#+#+   +#+             #
 #    Created: 2026/07/08 19:41:38 by sfurst           #+#    #+#               #
-#    Updated: 2026/07/08 19:51:43 by sfurst          ###   ########.fr         #
+#    Updated: 2026/07/10 19:48:05 by sfurst          ###   ########.fr         #
 #                                                                              #
 # **************************************************************************** #
 
@@ -44,13 +44,18 @@ SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/sim/fails.c \
 			  $(SRC_DIR)/sim/heap_init.c \
 			  $(SRC_DIR)/sim/init_simulation.c \
+			  $(SRC_DIR)/sim/release.c \
 			  $(SRC_DIR)/sim/sim.c \
 			  $(SRC_DIR)/sim/sim_cleanup.c \
+			  $(SRC_DIR)/sim/sim_helpers.c \
+			  $(SRC_DIR)/sim/sim_stuff.c \
 			  $(SRC_DIR)/sim/thread_join.c \
 			  $(SRC_DIR)/sim/thread_start.c \
 			  $(SRC_DIR)/utils/utils.c
 
-OBJS		= $(SRCS:.c=.o)
+OBJ_DIR		= obj
+
+OBJS		= $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS		= $(OBJS:.o=.d)
 
 all: $(NAME)
@@ -58,11 +63,12 @@ all: $(NAME)
 $(NAME): $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(LDLIBS) -o $(NAME)
 
-%.o: %.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(OBJS) $(DEPS)
+	$(RM) -r $(OBJ_DIR)
 
 fclean: clean
 	$(RM) $(NAME)
@@ -73,5 +79,9 @@ re:
 
 -include $(DEPS)
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re compiledb
 .DEFAULT_GOAL := all
+
+compiledb:
+	make fclean
+	compiledb -n make

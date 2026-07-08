@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:48:40 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/08 22:30:51 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 21:21:17 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,15 @@
 # include <pthread.h>
 # include <stdbool.h>
 # include <stdint.h>
+
+typedef struct s_coder		t_coder;
+
+typedef struct s_heap
+{
+	t_coder					**data;
+	uint32_t				size;
+	uint32_t				capacity;
+}							t_heap;
 
 typedef enum e_state
 {
@@ -31,8 +40,11 @@ typedef struct s_dongle
 {
 	pthread_mutex_t			mutex;
 	pthread_cond_t			cond;
+
 	bool					available;
 	int64_t					released_at;
+
+	t_heap					queue;
 }							t_dongle;
 
 typedef struct s_coder
@@ -47,21 +59,22 @@ typedef struct s_coder
 	struct s_app			*app;
 }							t_coder;
 
-typedef struct s_heap
+typedef struct s_scheduler
 {
-	t_coder					**data;
-	uint32_t				size;
-	uint32_t				capacity;
-}							t_heap;
+	t_heap					heap;
+	pthread_mutex_t			mutex;
+}							t_scheduler;
 
 typedef struct s_app
 {
 	t_args					args;
 	t_coder					*coders;
 	t_dongle				*dongles;
-	t_heap					sched_heap;
+
 	pthread_mutex_t			log_mutex;
 	pthread_mutex_t			state_mutex;
+	pthread_cond_t			stop_cond;
+
 	bool					simulation_stop;
 	int64_t					start_time;
 	pthread_t				monitor_thread;
@@ -166,5 +179,14 @@ void						*coder_routine(void *arg);
 void						join_simulation(t_app *app);
 void						*monitor_routine(void *arg);
 t_start_result				start_simulation(t_app *app);
+void						log_msg(t_app *app, uint32_t coder_id,
+								const char *msg);
+void						acquire_both_dongles(t_coder *coder);
+bool						all_coders_finished(t_app *app);
+void						good_sleep(t_app *app, uint64_t ms_to_sleep);
+bool						is_stopped(t_app *app);
+int64_t						now_ms(void);
+void						release_both_dongles(t_coder *coder);
+void						set_stop(t_app *app);
 
 #endif

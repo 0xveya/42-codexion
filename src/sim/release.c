@@ -1,42 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                       :::      ::::::::    */
-/*   sim_cleanup.c                                     :+:      :+:    :+:    */
+/*   release.c                                         :+:      :+:    :+:    */
 /*                                                   +:+ +:+         +:+      */
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
-/*   Created: 2026/07/08 21:45:03 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 21:22:06 by sfurst          ###   ########.fr        */
+/*   Created: 2026/07/10 19:22:06 by sfurst           #+#    #+#              */
+/*   Updated: 2026/07/10 19:22:15 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
-#include <pthread.h>
-#include <stdlib.h>
 
-void	free_coders(t_coder *coders, uint32_t count)
+void	release_dongle(t_dongle *dongle)
 {
-	(void)count;
-	free(coders);
+	pthread_mutex_lock(&dongle->mutex);
+	dongle->available = true;
+	dongle->released_at = now_ms();
+	pthread_cond_signal(&dongle->cond);
+	pthread_mutex_unlock(&dongle->mutex);
 }
 
-void	free_dongles(t_dongle *dongles, uint32_t count)
+void	release_both_dongles(t_coder *coder)
 {
-	uint32_t	i;
-
-	i = 0;
-	while (i < count)
-	{
-		pthread_mutex_destroy(&dongles[i].mutex);
-		pthread_cond_destroy(&dongles[i].cond);
-		free_heap(&dongles[i].queue);
-		i++;
-	}
-	free(dongles);
-}
-
-void	free_heap(t_heap *heap)
-{
-	free(heap->data);
-	heap->data = NULL;
+	release_dongle(coder->left);
+	release_dongle(coder->right);
 }

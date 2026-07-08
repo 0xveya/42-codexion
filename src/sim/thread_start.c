@@ -6,11 +6,12 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 22:27:47 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/08 22:31:07 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 21:14:25 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
+#include <stdint.h>
 
 static t_start_result	make_start_err(const char *msg)
 {
@@ -30,13 +31,6 @@ static t_start_result	start_ok_result(void)
 	return (result);
 }
 
-static void	request_stop(t_app *app)
-{
-	pthread_mutex_lock(&app->state_mutex);
-	app->simulation_stop = true;
-	pthread_mutex_unlock(&app->state_mutex);
-}
-
 static t_start_result	start_coders(t_app *app, uint32_t created)
 {
 	uint32_t	i;
@@ -47,7 +41,7 @@ static t_start_result	start_coders(t_app *app, uint32_t created)
 		if (pthread_create(&app->coders[i].thread, NULL, coder_routine,
 				&app->coders[i]) != 0)
 		{
-			request_stop(app);
+			set_stop(app);
 			while (created--)
 				pthread_join(app->coders[created].thread, NULL);
 			return (make_start_err("Failed to create coder thread"));
@@ -62,15 +56,16 @@ t_start_result	start_simulation(t_app *app)
 {
 	t_start_result	result;
 
+	app->start_time = now_ms();
 	app->simulation_stop = false;
-	result = start_coders(app, 0);
-	if (result.status == sim_start_err)
-		return (result);
 	if (pthread_create(&app->monitor_thread, NULL, monitor_routine, app) != 0)
 	{
-		request_stop(app);
+		set_stop(app);
 		join_simulation(app);
 		return (make_start_err("Failed to create monitor thread"));
 	}
+	result = start_coders(app, 0);
+	if (result.status == sim_start_err)
+		return (result);
 	return (start_ok_result());
 }

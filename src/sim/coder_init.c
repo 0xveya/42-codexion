@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 21:54:10 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/08 21:54:17 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 21:10:56 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ t_coder_init_result	init_coders(t_app *app)
 	i = 0;
 	while (i < app->args.number_of_coders)
 	{
-		init_coder_fields(&result.data.success[i], app, i);
+		init_coder_fields(&result.data.success[i], app, i + 1);
 		i++;
 	}
 	result.status = coder_init_ok;

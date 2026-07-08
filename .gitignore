@@ -56,3 +56,5 @@ dkms.conf
 *.dwo
 codexion
 obj/
+
+compile_commands.json
