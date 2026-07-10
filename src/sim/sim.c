@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:41:50 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 22:33:38 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 00:31:10 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,14 @@ void	*coder_routine(void *arg)
 	coder = (t_coder *)arg;
 	while (!is_stopped(coder->app))
 	{
+		pthread_mutex_lock(&coder->app->state_mutex);
+		if (coder->app->args.number_of_compiles_required > 0
+			&& coder->compiles_done >= coder->app->args.number_of_compiles_required)
+		{
+			pthread_mutex_unlock(&coder->app->state_mutex);
+			break ;
+		}
+		pthread_mutex_unlock(&coder->app->state_mutex);
 		acquire_both_dongles(coder);
 		if (is_stopped(coder->app))
 		{
@@ -51,9 +59,13 @@ void	*coder_routine(void *arg)
 			break ;
 		log_msg(coder->app, coder->id, MSG_REFACTOR, LEN_REFACTOR);
 		good_sleep(coder->app, coder->app->args.time_to_refactor);
+		pthread_mutex_lock(&coder->app->state_mutex);
+		coder->last_compile_start = now_ms();
+		pthread_mutex_unlock(&coder->app->state_mutex);
 	}
 	return (NULL);
 }
+
 void	set_stop(t_app *app)
 {
 	pthread_mutex_lock(&app->state_mutex);

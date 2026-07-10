@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:48:40 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 22:39:27 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 00:34:14 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,6 +186,7 @@ void						join_simulation(t_app *app);
 void						*monitor_routine(void *arg);
 int64_t						now_ms(void);
 void						release_both_dongles(t_coder *coder);
+void						release_dongle(t_dongle *dongle);
 void						set_stop(t_app *app);
 t_start_result				start_simulation(t_app *app);
 

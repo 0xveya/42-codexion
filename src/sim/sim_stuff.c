@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/10 19:08:17 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 22:35:09 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 00:33:24 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,12 +43,24 @@ static void	build_deadline(struct timespec *ts, uint64_t ms_to_wait)
 void	acquire_dongle(t_coder *coder, t_dongle *dongle, int64_t cooldown)
 {
 	struct timespec	wait_deadline;
+	int64_t			time_left;
+	int64_t			current;
+	int64_t			wake_at;
 
 	pthread_mutex_lock(&dongle->mutex);
-	while ((!dongle->available || now_ms() < dongle->released_at + cooldown)
-		&& !is_stopped(coder->app))
+	while (!is_stopped(coder->app))
 	{
-		build_deadline(&wait_deadline, 2000);
+		current = now_ms();
+		wake_at = dongle->released_at + cooldown;
+		if (dongle->available && current >= wake_at)
+			break ;
+		if (!dongle->available)
+			time_left = 2000;
+		else
+			time_left = wake_at - current;
+		if (time_left <= 0)
+			time_left = 1;
+		build_deadline(&wait_deadline, time_left);
 		pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &wait_deadline);
 	}
 	if (!is_stopped(coder->app))
@@ -90,10 +102,17 @@ void	acquire_both_dongles(t_coder *coder)
 	cooldown = coder->app->args.dongle_cooldown;
 	acquire_dongle(coder, first, cooldown);
 	if (is_stopped(coder->app))
+	{
+		release_dongle(first);
 		return ;
+	}
 	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 	acquire_dongle(coder, second, cooldown);
 	if (is_stopped(coder->app))
+	{
+		release_dongle(first);
+		release_dongle(second);
 		return ;
+	}
 	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 }

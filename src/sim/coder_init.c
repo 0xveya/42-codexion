@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 21:54:10 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 21:10:56 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 00:28:32 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ static void	init_coder_fields(t_coder *coder, t_app *app, uint32_t id)
 	coder->id = id;
 	coder->app = app;
 	coder->state = taking_dongle;
-	coder->last_compile_start = 0;
+	coder->last_compile_start = now_ms();
 	coder->compiles_done = 0;
 	coder->left = NULL;
 	coder->right = NULL;
