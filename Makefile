@@ -6,7 +6,7 @@
 #    By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+          #
 #                                                +#+#+#+#+#+   +#+             #
 #    Created: 2026/07/08 19:41:38 by sfurst           #+#    #+#               #
-#    Updated: 2026/07/10 19:48:05 by sfurst          ###   ########.fr         #
+#    Updated: 2026/07/10 23:13:30 by sfurst          ###   ########.fr         #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,6 +51,7 @@ SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/sim/sim_stuff.c \
 			  $(SRC_DIR)/sim/thread_join.c \
 			  $(SRC_DIR)/sim/thread_start.c \
+			  $(SRC_DIR)/utils/printing.c \
 			  $(SRC_DIR)/utils/utils.c
 
 OBJ_DIR		= obj

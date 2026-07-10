@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:48:40 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 21:21:17 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 22:39:27 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,8 @@ typedef struct s_app
 	bool					simulation_stop;
 	int64_t					start_time;
 	pthread_t				monitor_thread;
+	const char				*digits;
+
 }							t_app;
 
 typedef enum e_init_status
@@ -175,18 +177,16 @@ typedef struct s_start_result
 	t_start_data			data;
 }							t_start_result;
 
-void						*coder_routine(void *arg);
-void						join_simulation(t_app *app);
-void						*monitor_routine(void *arg);
-t_start_result				start_simulation(t_app *app);
-void						log_msg(t_app *app, uint32_t coder_id,
-								const char *msg);
 void						acquire_both_dongles(t_coder *coder);
 bool						all_coders_finished(t_app *app);
+void						*coder_routine(void *arg);
 void						good_sleep(t_app *app, uint64_t ms_to_sleep);
 bool						is_stopped(t_app *app);
+void						join_simulation(t_app *app);
+void						*monitor_routine(void *arg);
 int64_t						now_ms(void);
 void						release_both_dongles(t_coder *coder);
 void						set_stop(t_app *app);
+t_start_result				start_simulation(t_app *app);
 
 #endif

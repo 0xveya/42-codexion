@@ -6,10 +6,11 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/10 19:08:17 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 19:59:28 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 22:35:09 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "../../include/logging.h"
 #include "../../include/sim.h"
 #include <sys/time.h>
 #include <time.h>
@@ -81,7 +82,7 @@ void	acquire_both_dongles(t_coder *coder)
 	if (coder->left == coder->right)
 	{
 		acquire_dongle(coder, coder->left, coder->app->args.dongle_cooldown);
-		log_msg(coder->app, coder->id, "has taken a dongle");
+		log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 		good_sleep(coder->app, coder->app->args.time_to_burnout + 10);
 		return ;
 	}
@@ -90,9 +91,9 @@ void	acquire_both_dongles(t_coder *coder)
 	acquire_dongle(coder, first, cooldown);
 	if (is_stopped(coder->app))
 		return ;
-	log_msg(coder->app, coder->id, "has taken a dongle");
+	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 	acquire_dongle(coder, second, cooldown);
 	if (is_stopped(coder->app))
 		return ;
-	log_msg(coder->app, coder->id, "has taken a dongle");
+	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 }

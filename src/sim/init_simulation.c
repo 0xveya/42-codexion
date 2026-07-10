@@ -6,11 +6,12 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 21:55:10 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 21:22:21 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 22:43:21 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/init.h"
+#include "../../include/logging.h"
 #include <stdlib.h>
 
 static t_init_result	init_components(t_app *app)
@@ -63,6 +64,16 @@ t_init_result	init_simulation(const t_args *args)
 		return (result);
 	pthread_cond_init(&app->stop_cond, NULL);
 	link_dongles(app);
+	app->digits = "00010203040506070809"
+					"10111213141516171819"
+					"20212223242526272829"
+					"30313233343536373839"
+					"40414243444546474849"
+					"50515253545556575859"
+					"60616263646566676869"
+					"70717273747576777879"
+					"80818283848586878889"
+					"90919293949596979899";
 	result.status = init_ok;
 	result.data.success = app;
 	return (result);

@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/10 18:59:59 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 19:23:19 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 22:32:52 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,16 +21,6 @@ int64_t	now_ms(void)
 
 	gettimeofday(&current_time, NULL);
 	return (current_time.tv_sec * 1000 + current_time.tv_usec / 1000);
-}
-
-void	log_msg(t_app *app, uint32_t coder_id, const char *msg)
-{
-	int64_t	elapsed;
-
-	pthread_mutex_lock(&app->log_mutex);
-	elapsed = now_ms() - app->start_time;
-	printf("%ld %u %s\n", (long)elapsed, coder_id, msg);
-	pthread_mutex_unlock(&app->log_mutex);
 }
 
 bool	is_stopped(t_app *app)

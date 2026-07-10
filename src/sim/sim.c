@@ -6,11 +6,12 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:41:50 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 22:18:28 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/10 22:33:38 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/args.h"
+#include "../../include/logging.h"
 #include "../../include/sim.h"
 #include <unistd.h>
 
@@ -30,7 +31,7 @@ void	*coder_routine(void *arg)
 		pthread_mutex_lock(&coder->app->state_mutex);
 		coder->last_compile_start = now_ms();
 		pthread_mutex_unlock(&coder->app->state_mutex);
-		log_msg(coder->app, coder->id, "is compiling");
+		log_msg(coder->app, coder->id, MSG_COMPILE, LEN_COMPILE);
 		good_sleep(coder->app, coder->app->args.time_to_compile);
 		release_both_dongles(coder);
 		if (is_stopped(coder->app))
@@ -44,11 +45,11 @@ void	*coder_routine(void *arg)
 			pthread_cond_broadcast(&coder->app->stop_cond);
 		}
 		pthread_mutex_unlock(&coder->app->state_mutex);
-		log_msg(coder->app, coder->id, "is debugging");
+		log_msg(coder->app, coder->id, MSG_DEBUG, LEN_DEBUG);
 		good_sleep(coder->app, coder->app->args.time_to_debug);
 		if (is_stopped(coder->app))
 			break ;
-		log_msg(coder->app, coder->id, "is refactoring");
+		log_msg(coder->app, coder->id, MSG_REFACTOR, LEN_REFACTOR);
 		good_sleep(coder->app, coder->app->args.time_to_refactor);
 	}
 	return (NULL);
@@ -96,7 +97,7 @@ void	*monitor_routine(void *arg)
 				if (elapsed >= (int64_t)app->args.time_to_burnout)
 				{
 					pthread_mutex_unlock(&app->state_mutex);
-					log_msg(app, coder->id, "burned out");
+					log_msg(app, coder->id, MSG_BURNOUT, LEN_BURNOUT);
 					set_stop(app);
 					return (NULL);
 				}
