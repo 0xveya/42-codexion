@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/07 20:14:15 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 22:22:55 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:41:34 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ static void	cleanup_app(t_app *app)
 	pthread_mutex_destroy(&app->state_mutex);
 	pthread_mutex_destroy(&app->log_mutex);
 	pthread_cond_destroy(&app->stop_cond);
+	pthread_cond_destroy(&app->start_cond);
 	free_coders(app->coders, app->args.number_of_coders);
 	free_dongles(app->dongles, app->args.number_of_coders);
 	free(app);

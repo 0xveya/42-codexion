@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 21:55:10 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:41:57 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:22:11 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,15 +17,15 @@
 static const char	*digits_lookup(void)
 {
 	return ("00010203040506070809"
-		"10111213141516171819"
-		"20212223242526272829"
-		"30313233343536373839"
-		"40414243444546474849"
-		"50515253545556575859"
-		"60616263646566676869"
-		"70717273747576777879"
-		"80818283848586878889"
-		"90919293949596979899");
+			"10111213141516171819"
+			"20212223242526272829"
+			"30313233343536373839"
+			"40414243444546474849"
+			"50515253545556575859"
+			"60616263646566676869"
+			"70717273747576777879"
+			"80818283848586878889"
+			"90919293949596979899");
 }
 
 static t_init_result	init_components(t_app *app)
@@ -92,6 +92,9 @@ t_init_result	init_simulation(const t_args *args)
 	app->digits = digits_lookup();
 	app->coders_started = 0;
 	app->monitor_started = false;
+	app->simulation_started = false;
+	if (pthread_cond_init(&app->start_cond, NULL) != 0)
+		return (init_fail_start_cond(app));
 	result.status = init_ok;
 	result.data.success = app;
 	return (result);

@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/10 19:08:17 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:36:32 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:26:32 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ static int64_t	dongle_time_left(t_dongle *dongle, int64_t cooldown)
 	if (dongle->available && current >= wake_at)
 		return (0);
 	if (!dongle->available)
-		time_left = 2000;
+		time_left = 10;
 	else
 		time_left = wake_at - current;
 	if (time_left <= 0)
@@ -37,17 +37,17 @@ static int64_t	get_coder_deadline(t_coder *coder)
 
 	pthread_mutex_lock(&coder->app->state_mutex);
 	deadline = coder->last_compile_start
-		+ coder->app->args.time_to_burnout;
+		+ (int64_t)coder->app->args.time_to_burnout;
 	pthread_mutex_unlock(&coder->app->state_mutex);
 	return (deadline);
 }
 
-static bool	push_request(t_coder *coder, t_dongle *dongle)
+static bool	push_request(t_coder *coder, t_dongle *dongle, int64_t deadline)
 {
 	t_request	request;
 
 	request.coder = coder;
-	request.deadline = get_coder_deadline(coder);
+	request.deadline = deadline;
 	request.sequence = dongle->next_sequence++;
 	return (heap_push(&dongle->queue, request, coder->app));
 }
@@ -55,10 +55,11 @@ static bool	push_request(t_coder *coder, t_dongle *dongle)
 static bool	acquire_if_ready(t_coder *coder, t_dongle *dongle,
 		int64_t time_left)
 {
-	t_request	*head;
-
-	head = heap_peek(&dongle->queue);
-	if (head == NULL || head->coder != coder || time_left != 0)
+	if (!dongle->available)
+		return (false);
+	if (time_left != 0)
+		return (false);
+	if (!is_queue_head(dongle, coder))
 		return (false);
 	heap_pop(&dongle->queue, coder->app);
 	dongle->available = false;
@@ -68,22 +69,25 @@ static bool	acquire_if_ready(t_coder *coder, t_dongle *dongle,
 
 bool	acquire_dongle(t_coder *coder, t_dongle *dongle, int64_t cooldown)
 {
-	struct timespec	wait_deadline;
-	int64_t			time_left;
+	int64_t	time_left;
+	int64_t	deadline;
 
+	deadline = get_coder_deadline(coder);
 	pthread_mutex_lock(&dongle->mutex);
-	if (!push_request(coder, dongle))
-		return (pthread_mutex_unlock(&dongle->mutex), false);
+	if (!push_request(coder, dongle, deadline))
+	{
+		pthread_mutex_unlock(&dongle->mutex);
+		return (false);
+	}
 	while (!is_stopped(coder->app))
 	{
 		time_left = dongle_time_left(dongle, cooldown);
 		if (acquire_if_ready(coder, dongle, time_left))
-			return (pthread_mutex_unlock(&dongle->mutex), true);
-		if (time_left > 2000)
-			time_left = 2000;
-		build_deadline(&wait_deadline, (uint64_t)time_left);
-		pthread_cond_timedwait(&dongle->cond, &dongle->mutex,
-			&wait_deadline);
+		{
+			pthread_mutex_unlock(&dongle->mutex);
+			return (true);
+		}
+		wait_for_dongle(dongle, time_left);
 	}
 	heap_remove(&dongle->queue, coder, coder->app);
 	pthread_cond_broadcast(&dongle->cond);

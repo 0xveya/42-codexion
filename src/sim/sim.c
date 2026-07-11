@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:41:50 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 22:10:27 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:24:46 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,7 @@ static int	coder_is_done(t_coder *coder)
 
 	pthread_mutex_lock(&coder->app->state_mutex);
 	done = (coder->app->args.number_of_compiles_required > 0
-			&& coder->compiles_done
-			>= coder->app->args.number_of_compiles_required);
+			&& coder->compiles_done >= coder->app->args.number_of_compiles_required);
 	pthread_mutex_unlock(&coder->app->state_mutex);
 	return (done);
 }
@@ -57,6 +56,8 @@ void	*coder_routine(void *arg)
 	t_coder	*coder;
 
 	coder = (t_coder *)arg;
+	if (!wait_for_start(coder->app))
+		return (NULL);
 	while (!is_stopped(coder->app))
 	{
 		if (coder_is_done(coder) || !acquire_both_dongles(coder))
@@ -83,8 +84,7 @@ bool	all_coders_finished(t_app *app)
 	i = 0;
 	while (i < app->args.number_of_coders)
 	{
-		if (app->coders[i].compiles_done
-			< app->args.number_of_compiles_required)
+		if (app->coders[i].compiles_done < app->args.number_of_compiles_required)
 			return (false);
 		i++;
 	}

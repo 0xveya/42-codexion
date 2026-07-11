@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 22:27:47 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:43:47 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:28:16 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,8 @@ t_start_result	start_simulation(t_app *app)
 {
 	t_start_result	result;
 
-	set_initial_deadlines(app);
 	app->simulation_stop = false;
+	app->simulation_started = false;
 	app->coders_started = 0;
 	app->monitor_started = false;
 	if (pthread_create(&app->monitor_thread, NULL, monitor_routine, app) != 0)
@@ -84,5 +84,6 @@ t_start_result	start_simulation(t_app *app)
 		join_started_threads(app);
 		return (result);
 	}
+	start_all_threads(app);
 	return (start_ok_result());
 }

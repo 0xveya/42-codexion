@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                       :::      ::::::::    */
-/*   scheduler_compare.c                              :+:      :+:    :+:    */
+/*   scheduler_compare.c                               :+:      :+:    :+:    */
 /*                                                   +:+ +:+         +:+      */
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/11 23:10:00 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 23:10:00 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 00:59:05 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
 
-bool	request_before(t_app *app, t_request *a, t_request *b)
+bool	request_before(t_app *app, const t_request *a, const t_request *b)
 {
 	if (app->args.scheduler.policy == scheduler_fifo)
 		return (a->sequence < b->sequence);

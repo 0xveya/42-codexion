@@ -6,12 +6,12 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/10 18:59:59 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 22:32:52 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:43:25 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/sim.h"
 #include "../../include/logging.h"
+#include "../../include/sim.h"
 #include <bits/types/struct_timeval.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -53,6 +53,7 @@ void	set_stop(t_app *app)
 	pthread_mutex_lock(&app->state_mutex);
 	app->simulation_stop = true;
 	pthread_cond_broadcast(&app->stop_cond);
+	pthread_cond_broadcast(&app->start_cond);
 	pthread_mutex_unlock(&app->state_mutex);
 	wake_all_dongles(app);
 }
@@ -69,6 +70,7 @@ bool	stop_for_burnout(t_app *app, uint32_t id)
 	}
 	app->simulation_stop = true;
 	pthread_cond_broadcast(&app->stop_cond);
+	pthread_cond_broadcast(&app->start_cond);
 	pthread_mutex_unlock(&app->state_mutex);
 	log_msg_force(app, id, MSG_BURNOUT, LEN_BURNOUT);
 	pthread_mutex_unlock(&app->log_mutex);

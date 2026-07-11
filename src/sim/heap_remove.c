@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                       :::      ::::::::    */
-/*   heap_remove.c                                    :+:      :+:    :+:    */
+/*   heap_remove.c                                     :+:      :+:    :+:    */
 /*                                                   +:+ +:+         +:+      */
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/11 23:10:00 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 23:10:00 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 00:59:38 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ static void	sift_down(t_heap *heap, uint32_t index, t_app *app)
 bool	heap_remove(t_heap *heap, t_coder *coder, t_app *app)
 {
 	uint32_t	i;
+	uint32_t	parent;
 
 	i = 0;
 	while (i < heap->size && heap->data[i].coder != coder)
@@ -64,11 +65,18 @@ bool	heap_remove(t_heap *heap, t_coder *coder, t_app *app)
 	if (i == heap->size)
 		return (false);
 	heap->size--;
+	if (i == heap->size)
+		return (true);
 	heap->data[i] = heap->data[heap->size];
-	if (i < heap->size)
+	if (i > 0)
 	{
-		sift_up(heap, i, app);
-		sift_down(heap, i, app);
+		parent = (i - 1) / 2;
+		if (request_before(app, &heap->data[i], &heap->data[parent]))
+		{
+			sift_up(heap, i, app);
+			return (true);
+		}
 	}
+	sift_down(heap, i, app);
 	return (true);
 }

@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/11 00:38:54 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:26:54 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:25:31 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ void	*monitor_routine(void *arg)
 	t_app	*app;
 
 	app = (t_app *)arg;
+	if (!wait_for_start(app))
+		return (NULL);
 	while (!is_stopped(app))
 	{
 		if (check_burnouts(app))

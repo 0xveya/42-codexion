@@ -1,26 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                       :::      ::::::::    */
-/*   start_deadline.c                                  :+:      :+:    :+:    */
+/*   heap_helpers.c                                    :+:      :+:    :+:    */
 /*                                                   +:+ +:+         +:+      */
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
-/*   Created: 2026/07/11 23:10:00 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 23:10:00 by sfurst          ###   ########.fr        */
+/*   Created: 2026/07/12 01:13:10 by sfurst           #+#    #+#              */
+/*   Updated: 2026/07/12 01:13:35 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
 
-void	set_initial_deadlines(t_app *app)
+bool	is_queue_head(t_dongle *dongle, t_coder *coder)
 {
-	uint32_t	i;
+	t_request	*head;
 
-	app->start_time = now_ms();
-	i = 0;
-	while (i < app->args.number_of_coders)
-	{
-		app->coders[i].last_compile_start = app->start_time;
-		i++;
-	}
+	head = heap_peek(&dongle->queue);
+	if (head == NULL)
+		return (false);
+	return (head->coder == coder);
 }

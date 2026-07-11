@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   acquire.c                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: sfurst <sfurst@student.42vienna.com>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/07/11 22:50:00 by sfurst           #+#    #+#             */
-/*   Updated: 2026/07/11 22:50:00 by sfurst          ###   ########.fr       */
+/*                                                       :::      ::::::::    */
+/*   acquire.c                                         :+:      :+:    :+:    */
+/*                                                   +:+ +:+         +:+      */
+/*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
+/*                                               +#+#+#+#+#+   +#+            */
+/*   Created: 2026/07/11 22:50:00 by sfurst           #+#    #+#              */
+/*   Updated: 2026/07/12 01:11:14 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,7 @@ static void	ordered_pair(t_coder *coder, t_dongle **first, t_dongle **second)
 
 static bool	acquire_single_coder_dongle(t_coder *coder)
 {
-	if (!acquire_dongle(coder, coder->left,
-			coder->app->args.dongle_cooldown))
+	if (!acquire_dongle(coder, coder->left, coder->app->args.dongle_cooldown))
 		return (false);
 	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 	good_sleep(coder->app, coder->app->args.time_to_burnout + 10);
@@ -58,4 +57,19 @@ bool	acquire_both_dongles(t_coder *coder)
 	}
 	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
 	return (true);
+}
+
+void	wait_for_dongle(t_dongle *dongle, int64_t time_left)
+{
+	struct timespec	wait_deadline;
+
+	if (time_left == 0)
+	{
+		pthread_cond_wait(&dongle->cond, &dongle->mutex);
+		return ;
+	}
+	if (time_left > 2000)
+		time_left = 2000;
+	build_deadline(&wait_deadline, (uint64_t)time_left);
+	pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &wait_deadline);
 }

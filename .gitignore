@@ -58,3 +58,6 @@ codexion
 obj/
 
 compile_commands.json
+codexion_tsan
+*.log
+local_tests/

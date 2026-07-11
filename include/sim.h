@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:48:40 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:39:43 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/12 01:44:40 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,12 +68,6 @@ typedef struct s_coder
 	struct s_app			*app;
 }							t_coder;
 
-typedef struct s_scheduler
-{
-	t_heap					heap;
-	pthread_mutex_t			mutex;
-}							t_scheduler;
-
 typedef struct s_app
 {
 	t_args					args;
@@ -90,6 +84,8 @@ typedef struct s_app
 	const char				*digits;
 	uint32_t				coders_started;
 	bool					monitor_started;
+	pthread_cond_t			start_cond;
+	bool					simulation_started;
 
 }							t_app;
 
@@ -208,13 +204,22 @@ void						*monitor_routine(void *arg);
 int64_t						now_ms(void);
 void						build_deadline(struct timespec *ts,
 								uint64_t ms_to_wait);
-bool						request_before(t_app *app, t_request *a,
-								t_request *b);
+bool						request_before(t_app *app, const t_request *a,
+								const t_request *b);
+
 void						release_both_dongles(t_coder *coder);
 void						release_dongle(t_dongle *dongle);
 void						set_stop(t_app *app);
-void						set_initial_deadlines(t_app *app);
-bool						stop_for_burnout(t_app *app, uint32_t id);
 t_start_result				start_simulation(t_app *app);
+bool						stop_for_burnout(t_app *app, uint32_t id);
+void						wait_for_dongle(t_dongle *dongle,
+								int64_t time_left);
+t_init_result				init_fail_start_cond(t_app *app);
+t_init_result				init_result_err(const char *msg);
+bool						is_queue_head(t_dongle *dongle, t_coder *coder);
+bool						wait_for_start(t_app *app);
+void						set_all_coder_deadlines(t_app *app,
+								int64_t start_time);
+void						start_all_threads(t_app *app);
 
 #endif
