@@ -62,6 +62,7 @@ static bool	init_one_dongle(t_dongle *dongle, uint32_t number_of_coders)
 	dongle->queue = heap_res.data.success;
 	dongle->available = true;
 	dongle->released_at = 0;
+	dongle->next_sequence = 0;
 	return (true);
 }
 

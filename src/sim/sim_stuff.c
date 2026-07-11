@@ -6,113 +6,87 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/10 19:08:17 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 00:33:24 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 21:36:32 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/logging.h"
 #include "../../include/sim.h"
-#include <sys/time.h>
-#include <time.h>
 
-static void	ordered_pair(t_coder *coder, t_dongle **first, t_dongle **second)
+static int64_t	dongle_time_left(t_dongle *dongle, int64_t cooldown)
 {
-	if (coder->left < coder->right)
-	{
-		*first = coder->left;
-		*second = coder->right;
-	}
+	int64_t	time_left;
+	int64_t	current;
+	int64_t	wake_at;
+
+	current = now_ms();
+	wake_at = dongle->released_at + cooldown;
+	if (dongle->available && current >= wake_at)
+		return (0);
+	if (!dongle->available)
+		time_left = 2000;
 	else
-	{
-		*first = coder->right;
-		*second = coder->left;
-	}
+		time_left = wake_at - current;
+	if (time_left <= 0)
+		time_left = 1;
+	return (time_left);
 }
 
-static void	build_deadline(struct timespec *ts, uint64_t ms_to_wait)
+static int64_t	get_coder_deadline(t_coder *coder)
 {
-	struct timeval	tv;
-	int64_t			target_us;
+	int64_t	deadline;
 
-	gettimeofday(&tv, NULL);
-	target_us = tv.tv_usec + (ms_to_wait * 1000);
-	ts->tv_sec = tv.tv_sec + (target_us / 1000000);
-	ts->tv_nsec = (target_us % 1000000) * 1000;
+	pthread_mutex_lock(&coder->app->state_mutex);
+	deadline = coder->last_compile_start
+		+ coder->app->args.time_to_burnout;
+	pthread_mutex_unlock(&coder->app->state_mutex);
+	return (deadline);
 }
 
-void	acquire_dongle(t_coder *coder, t_dongle *dongle, int64_t cooldown)
+static bool	push_request(t_coder *coder, t_dongle *dongle)
+{
+	t_request	request;
+
+	request.coder = coder;
+	request.deadline = get_coder_deadline(coder);
+	request.sequence = dongle->next_sequence++;
+	return (heap_push(&dongle->queue, request, coder->app));
+}
+
+static bool	acquire_if_ready(t_coder *coder, t_dongle *dongle,
+		int64_t time_left)
+{
+	t_request	*head;
+
+	head = heap_peek(&dongle->queue);
+	if (head == NULL || head->coder != coder || time_left != 0)
+		return (false);
+	heap_pop(&dongle->queue, coder->app);
+	dongle->available = false;
+	pthread_cond_broadcast(&dongle->cond);
+	return (true);
+}
+
+bool	acquire_dongle(t_coder *coder, t_dongle *dongle, int64_t cooldown)
 {
 	struct timespec	wait_deadline;
 	int64_t			time_left;
-	int64_t			current;
-	int64_t			wake_at;
 
 	pthread_mutex_lock(&dongle->mutex);
+	if (!push_request(coder, dongle))
+		return (pthread_mutex_unlock(&dongle->mutex), false);
 	while (!is_stopped(coder->app))
 	{
-		current = now_ms();
-		wake_at = dongle->released_at + cooldown;
-		if (dongle->available && current >= wake_at)
-			break ;
-		if (!dongle->available)
+		time_left = dongle_time_left(dongle, cooldown);
+		if (acquire_if_ready(coder, dongle, time_left))
+			return (pthread_mutex_unlock(&dongle->mutex), true);
+		if (time_left > 2000)
 			time_left = 2000;
-		else
-			time_left = wake_at - current;
-		if (time_left <= 0)
-			time_left = 1;
-		build_deadline(&wait_deadline, time_left);
-		pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &wait_deadline);
+		build_deadline(&wait_deadline, (uint64_t)time_left);
+		pthread_cond_timedwait(&dongle->cond, &dongle->mutex,
+			&wait_deadline);
 	}
-	if (!is_stopped(coder->app))
-		dongle->available = false;
+	heap_remove(&dongle->queue, coder, coder->app);
+	pthread_cond_broadcast(&dongle->cond);
 	pthread_mutex_unlock(&dongle->mutex);
-}
-
-void	good_sleep(t_app *app, uint64_t ms_to_sleep)
-{
-	struct timespec	ts;
-
-	if (ms_to_sleep == 0)
-		return ;
-	build_deadline(&ts, ms_to_sleep);
-	pthread_mutex_lock(&app->state_mutex);
-	while (!app->simulation_stop)
-	{
-		if (pthread_cond_timedwait(&app->stop_cond, &app->state_mutex,
-				&ts) != 0)
-			break ;
-	}
-	pthread_mutex_unlock(&app->state_mutex);
-}
-
-void	acquire_both_dongles(t_coder *coder)
-{
-	t_dongle	*first;
-	t_dongle	*second;
-	int64_t		cooldown;
-
-	if (coder->left == coder->right)
-	{
-		acquire_dongle(coder, coder->left, coder->app->args.dongle_cooldown);
-		log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
-		good_sleep(coder->app, coder->app->args.time_to_burnout + 10);
-		return ;
-	}
-	ordered_pair(coder, &first, &second);
-	cooldown = coder->app->args.dongle_cooldown;
-	acquire_dongle(coder, first, cooldown);
-	if (is_stopped(coder->app))
-	{
-		release_dongle(first);
-		return ;
-	}
-	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
-	acquire_dongle(coder, second, cooldown);
-	if (is_stopped(coder->app))
-	{
-		release_dongle(first);
-		release_dongle(second);
-		return ;
-	}
-	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
+	return (false);
 }

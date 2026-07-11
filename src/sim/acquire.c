@@ -1,0 +1,61 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   acquire.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sfurst <sfurst@student.42vienna.com>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/11 22:50:00 by sfurst           #+#    #+#             */
+/*   Updated: 2026/07/11 22:50:00 by sfurst          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../include/logging.h"
+#include "../../include/sim.h"
+
+static void	ordered_pair(t_coder *coder, t_dongle **first, t_dongle **second)
+{
+	if (coder->left < coder->right)
+	{
+		*first = coder->left;
+		*second = coder->right;
+	}
+	else
+	{
+		*first = coder->right;
+		*second = coder->left;
+	}
+}
+
+static bool	acquire_single_coder_dongle(t_coder *coder)
+{
+	if (!acquire_dongle(coder, coder->left,
+			coder->app->args.dongle_cooldown))
+		return (false);
+	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
+	good_sleep(coder->app, coder->app->args.time_to_burnout + 10);
+	release_dongle(coder->left);
+	return (false);
+}
+
+bool	acquire_both_dongles(t_coder *coder)
+{
+	t_dongle	*first;
+	t_dongle	*second;
+	int64_t		cooldown;
+
+	if (coder->left == coder->right)
+		return (acquire_single_coder_dongle(coder));
+	ordered_pair(coder, &first, &second);
+	cooldown = coder->app->args.dongle_cooldown;
+	if (!acquire_dongle(coder, first, cooldown))
+		return (false);
+	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
+	if (!acquire_dongle(coder, second, cooldown))
+	{
+		release_dongle(first);
+		return (false);
+	}
+	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
+	return (true);
+}

@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
+#include "../../include/logging.h"
 #include <bits/types/struct_timeval.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -31,4 +32,46 @@ bool	is_stopped(t_app *app)
 	result = app->simulation_stop;
 	pthread_mutex_unlock(&app->state_mutex);
 	return (result);
+}
+
+static void	wake_all_dongles(t_app *app)
+{
+	uint32_t	i;
+
+	i = 0;
+	while (i < app->args.number_of_coders)
+	{
+		pthread_mutex_lock(&app->dongles[i].mutex);
+		pthread_cond_broadcast(&app->dongles[i].cond);
+		pthread_mutex_unlock(&app->dongles[i].mutex);
+		i++;
+	}
+}
+
+void	set_stop(t_app *app)
+{
+	pthread_mutex_lock(&app->state_mutex);
+	app->simulation_stop = true;
+	pthread_cond_broadcast(&app->stop_cond);
+	pthread_mutex_unlock(&app->state_mutex);
+	wake_all_dongles(app);
+}
+
+bool	stop_for_burnout(t_app *app, uint32_t id)
+{
+	pthread_mutex_lock(&app->state_mutex);
+	pthread_mutex_lock(&app->log_mutex);
+	if (app->simulation_stop)
+	{
+		pthread_mutex_unlock(&app->log_mutex);
+		pthread_mutex_unlock(&app->state_mutex);
+		return (false);
+	}
+	app->simulation_stop = true;
+	pthread_cond_broadcast(&app->stop_cond);
+	pthread_mutex_unlock(&app->state_mutex);
+	log_msg_force(app, id, MSG_BURNOUT, LEN_BURNOUT);
+	pthread_mutex_unlock(&app->log_mutex);
+	wake_all_dongles(app);
+	return (true);
 }

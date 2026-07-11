@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 22:27:47 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 21:14:25 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 21:43:47 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ static t_start_result	start_ok_result(void)
 	return (result);
 }
 
-static t_start_result	start_coders(t_app *app, uint32_t created)
+static t_start_result	start_coders(t_app *app)
 {
 	uint32_t	i;
 
@@ -41,31 +41,48 @@ static t_start_result	start_coders(t_app *app, uint32_t created)
 		if (pthread_create(&app->coders[i].thread, NULL, coder_routine,
 				&app->coders[i]) != 0)
 		{
-			set_stop(app);
-			while (created--)
-				pthread_join(app->coders[created].thread, NULL);
 			return (make_start_err("Failed to create coder thread"));
 		}
-		created++;
+		app->coders_started++;
 		i++;
 	}
 	return (start_ok_result());
+}
+
+static void	join_started_threads(t_app *app)
+{
+	while (app->coders_started > 0)
+	{
+		app->coders_started--;
+		pthread_join(app->coders[app->coders_started].thread, NULL);
+	}
+	if (app->monitor_started)
+	{
+		pthread_join(app->monitor_thread, NULL);
+		app->monitor_started = false;
+	}
 }
 
 t_start_result	start_simulation(t_app *app)
 {
 	t_start_result	result;
 
-	app->start_time = now_ms();
+	set_initial_deadlines(app);
 	app->simulation_stop = false;
+	app->coders_started = 0;
+	app->monitor_started = false;
 	if (pthread_create(&app->monitor_thread, NULL, monitor_routine, app) != 0)
 	{
 		set_stop(app);
-		join_simulation(app);
 		return (make_start_err("Failed to create monitor thread"));
 	}
-	result = start_coders(app, 0);
+	app->monitor_started = true;
+	result = start_coders(app);
 	if (result.status == sim_start_err)
+	{
+		set_stop(app);
+		join_started_threads(app);
 		return (result);
+	}
 	return (start_ok_result());
 }

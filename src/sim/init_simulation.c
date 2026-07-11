@@ -6,13 +6,27 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 21:55:10 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 22:43:21 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 21:41:57 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/init.h"
 #include "../../include/logging.h"
 #include <stdlib.h>
+
+static const char	*digits_lookup(void)
+{
+	return ("00010203040506070809"
+		"10111213141516171819"
+		"20212223242526272829"
+		"30313233343536373839"
+		"40414243444546474849"
+		"50515253545556575859"
+		"60616263646566676869"
+		"70717273747576777879"
+		"80818283848586878889"
+		"90919293949596979899");
+}
 
 static t_init_result	init_components(t_app *app)
 {
@@ -47,6 +61,16 @@ static void	link_dongles(t_app *app)
 	}
 }
 
+static t_init_result	init_fail_stop_cond(t_app *app)
+{
+	free_coders(app->coders, app->args.number_of_coders);
+	free_dongles(app->dongles, app->args.number_of_coders);
+	pthread_mutex_destroy(&app->state_mutex);
+	pthread_mutex_destroy(&app->log_mutex);
+	free(app);
+	return (init_result_err("Failed to init stop_cond"));
+}
+
 t_init_result	init_simulation(const t_args *args)
 {
 	t_app			*app;
@@ -62,18 +86,12 @@ t_init_result	init_simulation(const t_args *args)
 	result = init_components(app);
 	if (result.status == init_err)
 		return (result);
-	pthread_cond_init(&app->stop_cond, NULL);
+	if (pthread_cond_init(&app->stop_cond, NULL) != 0)
+		return (init_fail_stop_cond(app));
 	link_dongles(app);
-	app->digits = "00010203040506070809"
-					"10111213141516171819"
-					"20212223242526272829"
-					"30313233343536373839"
-					"40414243444546474849"
-					"50515253545556575859"
-					"60616263646566676869"
-					"70717273747576777879"
-					"80818283848586878889"
-					"90919293949596979899";
+	app->digits = digits_lookup();
+	app->coders_started = 0;
+	app->monitor_started = false;
 	result.status = init_ok;
 	result.data.success = app;
 	return (result);

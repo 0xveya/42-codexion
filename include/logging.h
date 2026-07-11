@@ -30,18 +30,20 @@ typedef struct s_log_data
 # define LEN_FORK 18
 
 # define MSG_COMPILE "is compiling"
-# define LEN_COMPILE 13
+# define LEN_COMPILE 12
 
 # define MSG_DEBUG "is debugging"
-# define LEN_DEBUG 13
+# define LEN_DEBUG 12
 
 # define MSG_REFACTOR "is refactoring"
-# define LEN_REFACTOR 15
+# define LEN_REFACTOR 14
 
 # define MSG_BURNOUT "burned out"
 # define LEN_BURNOUT 10
 
 void					log_msg(t_app *app, uint32_t id, const char *msg,
 							int msg_len);
+void					log_msg_force(t_app *app, uint32_t id,
+							const char *msg, int msg_len);
 
 #endif

@@ -18,7 +18,7 @@ static void	init_coder_fields(t_coder *coder, t_app *app, uint32_t id)
 	coder->id = id;
 	coder->app = app;
 	coder->state = taking_dongle;
-	coder->last_compile_start = now_ms();
+	coder->last_compile_start = 0;
 	coder->compiles_done = 0;
 	coder->left = NULL;
 	coder->right = NULL;

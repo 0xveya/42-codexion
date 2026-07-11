@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/07 20:14:15 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/10 21:22:32 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 22:22:55 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,17 +21,16 @@ static void	cleanup_app(t_app *app)
 {
 	pthread_mutex_destroy(&app->state_mutex);
 	pthread_mutex_destroy(&app->log_mutex);
+	pthread_cond_destroy(&app->stop_cond);
 	free_coders(app->coders, app->args.number_of_coders);
 	free_dongles(app->dongles, app->args.number_of_coders);
 	free(app);
 }
 
-int	main(int argc, char *argv[])
+static int	init_app(int argc, char *argv[], t_app **app)
 {
 	t_parse_result	res;
 	t_init_result	init_res;
-	t_start_result	start_res;
-	t_app			*app;
 
 	res = parse_arguments(argc, argv);
 	if (res.status == parse_err)
@@ -45,7 +44,17 @@ int	main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", init_res.data.error_msg);
 		return (1);
 	}
-	app = init_res.data.success;
+	*app = init_res.data.success;
+	return (0);
+}
+
+int	main(int argc, char *argv[])
+{
+	t_start_result	start_res;
+	t_app			*app;
+
+	if (init_app(argc, argv, &app) != 0)
+		return (1);
 	start_res = start_simulation(app);
 	if (start_res.status == sim_start_err)
 	{

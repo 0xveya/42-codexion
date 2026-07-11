@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:48:40 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 00:34:14 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/11 21:39:43 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,20 @@
 # include <pthread.h>
 # include <stdbool.h>
 # include <stdint.h>
+# include <time.h>
 
 typedef struct s_coder		t_coder;
 
+typedef struct s_request
+{
+	t_coder					*coder;
+	uint64_t				sequence;
+	int64_t					deadline;
+}							t_request;
+
 typedef struct s_heap
 {
-	t_coder					**data;
+	t_request				*data;
 	uint32_t				size;
 	uint32_t				capacity;
 }							t_heap;
@@ -43,6 +51,7 @@ typedef struct s_dongle
 
 	bool					available;
 	int64_t					released_at;
+	uint64_t				next_sequence;
 
 	t_heap					queue;
 }							t_dongle;
@@ -79,6 +88,8 @@ typedef struct s_app
 	int64_t					start_time;
 	pthread_t				monitor_thread;
 	const char				*digits;
+	uint32_t				coders_started;
+	bool					monitor_started;
 
 }							t_app;
 
@@ -177,17 +188,33 @@ typedef struct s_start_result
 	t_start_data			data;
 }							t_start_result;
 
-void						acquire_both_dongles(t_coder *coder);
+bool						acquire_both_dongles(t_coder *coder);
+bool						acquire_dongle(t_coder *coder, t_dongle *dongle,
+								int64_t cooldown);
 bool						all_coders_finished(t_app *app);
 void						*coder_routine(void *arg);
 void						good_sleep(t_app *app, uint64_t ms_to_sleep);
+bool						heap_push(t_heap *heap, t_request request,
+								t_app *app);
+t_request					*heap_peek(t_heap *heap);
+void						heap_pop(t_heap *heap, t_app *app);
+bool						heap_remove(t_heap *heap, t_coder *coder,
+								t_app *app);
 bool						is_stopped(t_app *app);
 void						join_simulation(t_app *app);
+void						log_msg_force(t_app *app, uint32_t id,
+								const char *msg, int msg_len);
 void						*monitor_routine(void *arg);
 int64_t						now_ms(void);
+void						build_deadline(struct timespec *ts,
+								uint64_t ms_to_wait);
+bool						request_before(t_app *app, t_request *a,
+								t_request *b);
 void						release_both_dongles(t_coder *coder);
 void						release_dongle(t_dongle *dongle);
 void						set_stop(t_app *app);
+void						set_initial_deadlines(t_app *app);
+bool						stop_for_burnout(t_app *app, uint32_t id);
 t_start_result				start_simulation(t_app *app);
 
 #endif

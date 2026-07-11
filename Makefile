@@ -6,7 +6,7 @@
 #    By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+          #
 #                                                +#+#+#+#+#+   +#+             #
 #    Created: 2026/07/08 19:41:38 by sfurst           #+#    #+#               #
-#    Updated: 2026/07/10 23:26:23 by sfurst          ###   ########.fr         #
+#    Updated: 2026/07/11 21:26:59 by sfurst          ###   ########.fr         #
 #                                                                              #
 # **************************************************************************** #
 
@@ -43,11 +43,19 @@ SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/sim/dongle_init.c \
 			  $(SRC_DIR)/sim/fails.c \
 			  $(SRC_DIR)/sim/heap_init.c \
+			  $(SRC_DIR)/sim/acquire.c \
+			  $(SRC_DIR)/sim/heap_push.c \
+			  $(SRC_DIR)/sim/heap_pop.c \
+			  $(SRC_DIR)/sim/heap_remove.c \
 			  $(SRC_DIR)/sim/init_simulation.c \
+			  $(SRC_DIR)/sim/monitor.c \
 			  $(SRC_DIR)/sim/release.c \
+			  $(SRC_DIR)/sim/scheduler_compare.c \
 			  $(SRC_DIR)/sim/sim.c \
 			  $(SRC_DIR)/sim/sim_cleanup.c \
 			  $(SRC_DIR)/sim/sim_helpers.c \
+			  $(SRC_DIR)/sim/sleep.c \
+			  $(SRC_DIR)/sim/start_deadline.c \
 			  $(SRC_DIR)/sim/sim_stuff.c \
 			  $(SRC_DIR)/sim/thread_join.c \
 			  $(SRC_DIR)/sim/thread_start.c \

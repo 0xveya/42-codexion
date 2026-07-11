@@ -69,7 +69,7 @@ static int	build_line(char *buf, t_log_data *data)
 	return (len);
 }
 
-void	log_msg(t_app *app, uint32_t id, const char *msg, int msg_len)
+void	log_msg_force(t_app *app, uint32_t id, const char *msg, int msg_len)
 {
 	char		buf[64];
 	int			len;
@@ -81,8 +81,20 @@ void	log_msg(t_app *app, uint32_t id, const char *msg, int msg_len)
 	data.msg_len = msg_len;
 	data.digits = app->digits;
 	len = build_line(buf, &data);
-	pthread_mutex_lock(&app->log_mutex);
 	write(1, buf, len);
+}
+
+void	log_msg(t_app *app, uint32_t id, const char *msg, int msg_len)
+{
+	pthread_mutex_lock(&app->state_mutex);
+	if (app->simulation_stop)
+	{
+		pthread_mutex_unlock(&app->state_mutex);
+		return ;
+	}
+	pthread_mutex_lock(&app->log_mutex);
+	pthread_mutex_unlock(&app->state_mutex);
+	log_msg_force(app, id, msg, msg_len);
 	pthread_mutex_unlock(&app->log_mutex);
 }
 

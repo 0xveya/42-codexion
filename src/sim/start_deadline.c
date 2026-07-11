@@ -1,29 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                       :::      ::::::::    */
-/*   release.c                                         :+:      :+:    :+:    */
+/*   start_deadline.c                                  :+:      :+:    :+:    */
 /*                                                   +:+ +:+         +:+      */
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
-/*   Created: 2026/07/10 19:22:06 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:38:06 by sfurst          ###   ########.fr        */
+/*   Created: 2026/07/11 23:10:00 by sfurst           #+#    #+#              */
+/*   Updated: 2026/07/11 23:10:00 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
 
-void	release_dongle(t_dongle *dongle)
+void	set_initial_deadlines(t_app *app)
 {
-	pthread_mutex_lock(&dongle->mutex);
-	dongle->available = true;
-	dongle->released_at = now_ms();
-	pthread_cond_broadcast(&dongle->cond);
-	pthread_mutex_unlock(&dongle->mutex);
-}
+	uint32_t	i;
 
-void	release_both_dongles(t_coder *coder)
-{
-	release_dongle(coder->left);
-	if (coder->right != coder->left)
-		release_dongle(coder->right);
+	app->start_time = now_ms();
+	i = 0;
+	while (i < app->args.number_of_coders)
+	{
+		app->coders[i].last_compile_start = app->start_time;
+		i++;
+	}
 }

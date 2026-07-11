@@ -1,29 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                       :::      ::::::::    */
-/*   release.c                                         :+:      :+:    :+:    */
+/*   scheduler_compare.c                              :+:      :+:    :+:    */
 /*                                                   +:+ +:+         +:+      */
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
-/*   Created: 2026/07/10 19:22:06 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/11 21:38:06 by sfurst          ###   ########.fr        */
+/*   Created: 2026/07/11 23:10:00 by sfurst           #+#    #+#              */
+/*   Updated: 2026/07/11 23:10:00 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
 
-void	release_dongle(t_dongle *dongle)
+bool	request_before(t_app *app, t_request *a, t_request *b)
 {
-	pthread_mutex_lock(&dongle->mutex);
-	dongle->available = true;
-	dongle->released_at = now_ms();
-	pthread_cond_broadcast(&dongle->cond);
-	pthread_mutex_unlock(&dongle->mutex);
-}
-
-void	release_both_dongles(t_coder *coder)
-{
-	release_dongle(coder->left);
-	if (coder->right != coder->left)
-		release_dongle(coder->right);
+	if (app->args.scheduler.policy == scheduler_fifo)
+		return (a->sequence < b->sequence);
+	if (a->deadline != b->deadline)
+		return (a->deadline < b->deadline);
+	if (a->sequence != b->sequence)
+		return (a->sequence < b->sequence);
+	return (a->coder->id < b->coder->id);
 }

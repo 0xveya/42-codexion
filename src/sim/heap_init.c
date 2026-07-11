@@ -39,7 +39,7 @@ t_heap_init_result	init_heap(uint32_t capacity)
 		return (heap_capacity_err());
 	result.data.success.size = 0;
 	result.data.success.capacity = capacity;
-	result.data.success.data = malloc(sizeof(t_coder *) * capacity);
+	result.data.success.data = malloc(sizeof(t_request) * capacity);
 	if (result.data.success.data == NULL)
 		return (heap_alloc_err());
 	result.status = heap_init_ok;
