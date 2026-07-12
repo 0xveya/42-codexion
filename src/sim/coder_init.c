@@ -13,6 +13,7 @@
 #include "../../include/init.h"
 #include <stdlib.h>
 
+/* Lock: none; initializes one coder before threads exist. */
 static void	init_coder_fields(t_coder *coder, t_app *app, uint32_t id)
 {
 	coder->id = id;
@@ -25,6 +26,7 @@ static void	init_coder_fields(t_coder *coder, t_app *app, uint32_t id)
 	coder->thread = 0;
 }
 
+/* Lock: none; builds an allocation error. */
 static t_coder_init_result	coder_alloc_err(void)
 {
 	t_coder_init_result	result;
@@ -34,6 +36,7 @@ static t_coder_init_result	coder_alloc_err(void)
 	return (result);
 }
 
+/* Lock: none; allocates coders before threads exist. */
 t_coder_init_result	init_coders(t_app *app)
 {
 	t_coder_init_result	result;

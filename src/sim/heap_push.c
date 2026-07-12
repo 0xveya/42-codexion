@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: caller protects the heap being mutated. */
 static void	swap_requests(t_request *a, t_request *b)
 {
 	t_request	tmp;
@@ -21,6 +22,7 @@ static void	swap_requests(t_request *a, t_request *b)
 	*b = tmp;
 }
 
+/* Lock: caller must hold dongle mutex for shared heaps. */
 bool	heap_push(t_heap *heap, t_request request, t_app *app)
 {
 	uint32_t	index;
@@ -42,6 +44,7 @@ bool	heap_push(t_heap *heap, t_request request, t_app *app)
 	return (true);
 }
 
+/* Lock: caller must hold dongle mutex for shared heaps. */
 t_request	*heap_peek(t_heap *heap)
 {
 	if (heap->size == 0)

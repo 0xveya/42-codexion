@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <time.h>
 
+/* Lock: none; builds an absolute condition timeout. */
 void	build_deadline(struct timespec *ts, uint64_t ms_to_wait)
 {
 	struct timeval	tv;
@@ -25,6 +26,7 @@ void	build_deadline(struct timespec *ts, uint64_t ms_to_wait)
 	ts->tv_nsec = (target_us % 1000000) * 1000;
 }
 
+/* Lock: holds state_mutex while timed-waiting on stop_cond. */
 void	good_sleep(t_app *app, uint64_t ms_to_sleep)
 {
 	struct timespec	ts;

@@ -13,6 +13,7 @@
 #include "../../include/init.h"
 #include <stdlib.h>
 
+/* Lock: none; builds a heap capacity error. */
 static t_heap_init_result	heap_capacity_err(void)
 {
 	t_heap_init_result	result;
@@ -22,6 +23,7 @@ static t_heap_init_result	heap_capacity_err(void)
 	return (result);
 }
 
+/* Lock: none; builds a heap allocation error. */
 static t_heap_init_result	heap_alloc_err(void)
 {
 	t_heap_init_result	result;
@@ -31,6 +33,7 @@ static t_heap_init_result	heap_alloc_err(void)
 	return (result);
 }
 
+/* Lock: none; allocates heap before sharing. */
 t_heap_init_result	init_heap(uint32_t capacity)
 {
 	t_heap_init_result	result;

@@ -14,12 +14,14 @@
 #include <pthread.h>
 #include <stdlib.h>
 
+/* Lock: none; call only after coder threads are joined. */
 void	free_coders(t_coder *coders, uint32_t count)
 {
 	(void)count;
 	free(coders);
 }
 
+/* Lock: destroys dongle locks after all threads are joined. */
 void	free_dongles(t_dongle *dongles, uint32_t count)
 {
 	uint32_t	i;
@@ -35,6 +37,7 @@ void	free_dongles(t_dongle *dongles, uint32_t count)
 	free(dongles);
 }
 
+/* Lock: none; caller owns the heap. */
 void	free_heap(t_heap *heap)
 {
 	free(heap->data);

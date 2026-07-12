@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
+/* Lock: none; reads wall clock. */
 int64_t	now_ms(void)
 {
 	struct timeval	current_time;
@@ -24,6 +25,7 @@ int64_t	now_ms(void)
 	return (current_time.tv_sec * 1000 + current_time.tv_usec / 1000);
 }
 
+/* Lock: holds state_mutex while reading simulation_stop. */
 bool	is_stopped(t_app *app)
 {
 	bool	result;
@@ -34,6 +36,7 @@ bool	is_stopped(t_app *app)
 	return (result);
 }
 
+/* Lock: locks each dongle mutex before broadcasting its condition. */
 static void	wake_all_dongles(t_app *app)
 {
 	uint32_t	i;
@@ -48,6 +51,7 @@ static void	wake_all_dongles(t_app *app)
 	}
 }
 
+/* Lock: holds state_mutex, then wakes all dongle conditions. */
 void	set_stop(t_app *app)
 {
 	pthread_mutex_lock(&app->state_mutex);
@@ -58,6 +62,7 @@ void	set_stop(t_app *app)
 	wake_all_dongles(app);
 }
 
+/* Lock: holds state_mutex and log_mutex for final burnout log. */
 bool	stop_for_burnout(t_app *app, uint32_t id)
 {
 	pthread_mutex_lock(&app->state_mutex);

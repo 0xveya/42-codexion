@@ -14,20 +14,22 @@
 #include "../../include/logging.h"
 #include <stdlib.h>
 
+/* Lock: none; returns a static digit lookup table. */
 static const char	*digits_lookup(void)
 {
 	return ("00010203040506070809"
-			"10111213141516171819"
-			"20212223242526272829"
-			"30313233343536373839"
-			"40414243444546474849"
-			"50515253545556575859"
-			"60616263646566676869"
-			"70717273747576777879"
-			"80818283848586878889"
-			"90919293949596979899");
+		"10111213141516171819"
+		"20212223242526272829"
+		"30313233343536373839"
+		"40414243444546474849"
+		"50515253545556575859"
+		"60616263646566676869"
+		"70717273747576777879"
+		"80818283848586878889"
+		"90919293949596979899");
 }
 
+/* Lock: none; allocates components before threads exist. */
 static t_init_result	init_components(t_app *app)
 {
 	t_dongle_init_result	dongles;
@@ -46,6 +48,7 @@ static t_init_result	init_components(t_app *app)
 	return (result);
 }
 
+/* Lock: none; links initialized arrays before threads exist. */
 static void	link_dongles(t_app *app)
 {
 	uint32_t	i;
@@ -61,6 +64,7 @@ static void	link_dongles(t_app *app)
 	}
 }
 
+/* Lock: destroys initialized locks during failed startup. */
 static t_init_result	init_fail_stop_cond(t_app *app)
 {
 	free_coders(app->coders, app->args.number_of_coders);
@@ -71,6 +75,7 @@ static t_init_result	init_fail_stop_cond(t_app *app)
 	return (init_result_err("Failed to init stop_cond"));
 }
 
+/* Lock: initializes mutexes and conditions before sharing app. */
 t_init_result	init_simulation(const t_args *args)
 {
 	t_app			*app;

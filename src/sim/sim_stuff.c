@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: caller must hold dongle mutex. */
 static int64_t	dongle_time_left(t_dongle *dongle, int64_t cooldown)
 {
 	int64_t	time_left;
@@ -31,6 +32,7 @@ static int64_t	dongle_time_left(t_dongle *dongle, int64_t cooldown)
 	return (time_left);
 }
 
+/* Lock: holds state_mutex while reading coder deadline data. */
 static int64_t	get_coder_deadline(t_coder *coder)
 {
 	int64_t	deadline;
@@ -42,6 +44,7 @@ static int64_t	get_coder_deadline(t_coder *coder)
 	return (deadline);
 }
 
+/* Lock: caller must hold dongle mutex. */
 static bool	push_request(t_coder *coder, t_dongle *dongle, int64_t deadline)
 {
 	t_request	request;
@@ -52,6 +55,7 @@ static bool	push_request(t_coder *coder, t_dongle *dongle, int64_t deadline)
 	return (heap_push(&dongle->queue, request, coder->app));
 }
 
+/* Lock: caller must hold dongle mutex. */
 static bool	acquire_if_ready(t_coder *coder, t_dongle *dongle,
 		int64_t time_left)
 {
@@ -67,6 +71,7 @@ static bool	acquire_if_ready(t_coder *coder, t_dongle *dongle,
 	return (true);
 }
 
+/* Lock: holds dongle mutex for queue and availability state. */
 bool	acquire_dongle(t_coder *coder, t_dongle *dongle, int64_t cooldown)
 {
 	int64_t	time_left;

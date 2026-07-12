@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: caller must hold dongle mutex protecting the heap. */
 bool	is_queue_head(t_dongle *dongle, t_coder *coder)
 {
 	t_request	*head;

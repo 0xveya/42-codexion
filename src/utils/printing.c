@@ -14,6 +14,7 @@
 #include "../../include/sim.h"
 #include <unistd.h>
 
+/* Lock: none; caller owns the destination buffer. */
 static inline void	copy_bytes(char *dst, const char *src, int len)
 {
 	int	i;
@@ -26,6 +27,7 @@ static inline void	copy_bytes(char *dst, const char *src, int len)
 	}
 }
 
+/* Lock: none; formats into caller-owned memory. */
 static inline int	append_u64(char *dst, uint64_t n, const char *digits)
 {
 	char		tmp[20];
@@ -54,6 +56,7 @@ static inline int	append_u64(char *dst, uint64_t n, const char *digits)
 	return (20 - pos);
 }
 
+/* Lock: none; builds one line into caller-owned memory. */
 static int	build_line(char *buf, t_log_data *data)
 {
 	int	len;
@@ -69,6 +72,7 @@ static int	build_line(char *buf, t_log_data *data)
 	return (len);
 }
 
+/* Lock: caller must serialize stdout with log_mutex. */
 void	log_msg_force(t_app *app, uint32_t id, const char *msg, int msg_len)
 {
 	char		buf[64];
@@ -84,6 +88,7 @@ void	log_msg_force(t_app *app, uint32_t id, const char *msg, int msg_len)
 	write(1, buf, len);
 }
 
+/* Lock: state_mutex for stop check, log_mutex for write. */
 void	log_msg(t_app *app, uint32_t id, const char *msg, int msg_len)
 {
 	pthread_mutex_lock(&app->state_mutex);

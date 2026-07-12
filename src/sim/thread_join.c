@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: none directly; waits for already-started threads to exit. */
 void	join_simulation(t_app *app)
 {
 	uint32_t	i;

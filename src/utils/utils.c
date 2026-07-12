@@ -12,11 +12,13 @@
 
 #include "../../include/args.h"
 
+/* Lock: none; pure character helper. */
 static int	ft_isdigit(int c)
 {
 	return (c >= '0' && c <= '9');
 }
 
+/* Lock: none; pure integer parser. */
 t_int_result	ft_parse_uint(const char *str, int is_u32)
 {
 	t_int_result	res;

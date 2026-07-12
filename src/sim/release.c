@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: holds dongle mutex and broadcasts dongle condition. */
 void	release_dongle(t_dongle *dongle)
 {
 	pthread_mutex_lock(&dongle->mutex);
@@ -21,6 +22,7 @@ void	release_dongle(t_dongle *dongle)
 	pthread_mutex_unlock(&dongle->mutex);
 }
 
+/* Lock: delegates to release_dongle for each held dongle. */
 void	release_both_dongles(t_coder *coder)
 {
 	release_dongle(coder->left);

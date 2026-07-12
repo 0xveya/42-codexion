@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: caller protects the heap being mutated. */
 static void	swap_requests(t_request *a, t_request *b)
 {
 	t_request	tmp;
@@ -21,6 +22,7 @@ static void	swap_requests(t_request *a, t_request *b)
 	*b = tmp;
 }
 
+/* Lock: caller protects the heap being mutated. */
 static void	sift_up(t_heap *heap, uint32_t index, t_app *app)
 {
 	uint32_t	parent;
@@ -35,6 +37,7 @@ static void	sift_up(t_heap *heap, uint32_t index, t_app *app)
 	}
 }
 
+/* Lock: caller protects the heap being mutated. */
 static void	sift_down(t_heap *heap, uint32_t index, t_app *app)
 {
 	uint32_t	child;
@@ -54,6 +57,7 @@ static void	sift_down(t_heap *heap, uint32_t index, t_app *app)
 	}
 }
 
+/* Lock: caller must hold dongle mutex for shared heaps. */
 bool	heap_remove(t_heap *heap, t_coder *coder, t_app *app)
 {
 	uint32_t	i;

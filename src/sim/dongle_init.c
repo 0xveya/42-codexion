@@ -13,6 +13,7 @@
 #include "../../include/init.h"
 #include <stdlib.h>
 
+/* Lock: none; builds an allocation error. */
 static t_dongle_init_result	dongle_alloc_err(void)
 {
 	t_dongle_init_result	result;
@@ -41,6 +42,7 @@ static t_dongle_init_result	dongle_init_err_result(t_dongle *dongles,
 	return (result);
 }
 
+/* Lock: initializes one dongle mutex and condition before sharing. */
 static bool	init_one_dongle(t_dongle *dongle, uint32_t number_of_coders)
 {
 	t_heap_init_result	heap_res;
@@ -66,6 +68,7 @@ static bool	init_one_dongle(t_dongle *dongle, uint32_t number_of_coders)
 	return (true);
 }
 
+/* Lock: none at runtime; initializes dongles before threads exist. */
 t_dongle_init_result	init_dongles(uint32_t number_of_coders)
 {
 	t_dongle_init_result	result;

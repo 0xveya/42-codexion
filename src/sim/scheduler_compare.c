@@ -12,6 +12,7 @@
 
 #include "../../include/sim.h"
 
+/* Lock: none; caller protects queue state. */
 bool	request_before(t_app *app, const t_request *a, const t_request *b)
 {
 	if (app->args.scheduler.policy == scheduler_fifo)

@@ -13,6 +13,7 @@
 #include "../../include/sim.h"
 #include <stdlib.h>
 
+/* Lock: holds state_mutex while waiting on start_cond. */
 bool	wait_for_start(t_app *app)
 {
 	pthread_mutex_lock(&app->state_mutex);
@@ -27,6 +28,7 @@ bool	wait_for_start(t_app *app)
 	return (true);
 }
 
+/* Lock: destroys initialized synchronization objects on init failure. */
 t_init_result	init_fail_start_cond(t_app *app)
 {
 	pthread_cond_destroy(&app->stop_cond);
@@ -38,6 +40,7 @@ t_init_result	init_fail_start_cond(t_app *app)
 	return (init_result_err("Failed to init start_cond"));
 }
 
+/* Lock: caller must hold state_mutex. */
 void	set_all_coder_deadlines(t_app *app, int64_t start_time)
 {
 	uint32_t	i;
@@ -50,6 +53,7 @@ void	set_all_coder_deadlines(t_app *app, int64_t start_time)
 	}
 }
 
+/* Lock: holds state_mutex and broadcasts start_cond. */
 void	start_all_threads(t_app *app)
 {
 	pthread_mutex_lock(&app->state_mutex);

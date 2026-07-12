@@ -13,6 +13,7 @@
 #include "../../include/sim.h"
 #include <unistd.h>
 
+/* Lock: called with state_mutex held; unlocks before stop_for_burnout. */
 static bool	check_coder_burnout(t_app *app, t_coder *coder)
 {
 	int64_t	elapsed;
@@ -29,6 +30,7 @@ static bool	check_coder_burnout(t_app *app, t_coder *coder)
 	return (false);
 }
 
+/* Lock: holds state_mutex while scanning coder deadlines. */
 static bool	check_burnouts(t_app *app)
 {
 	uint32_t	i;
@@ -45,6 +47,7 @@ static bool	check_burnouts(t_app *app)
 	return (false);
 }
 
+/* Lock: uses start wait, stop checks, and burnout scan helpers. */
 void	*monitor_routine(void *arg)
 {
 	t_app	*app;

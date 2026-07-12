@@ -6,7 +6,7 @@
 #    By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+          #
 #                                                +#+#+#+#+#+   +#+             #
 #    Created: 2026/07/08 19:41:38 by sfurst           #+#    #+#               #
-#    Updated: 2026/07/12 01:45:44 by sfurst          ###   ########.fr         #
+#    Updated: 2026/07/12 02:22:20 by sfurst          ###   ########.fr         #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,6 +26,9 @@ ifeq ($(DEBUG),1)
 CFLAGS		+= -g3
 CPPFLAGS	+= -DDEBUG=1
 endif
+
+JOBS ?= $(shell nproc)
+MAKEFLAGS += -j $(JOBS) -l $(JOBS)
 
 SRC_DIR		= src
 OBJ_DIR		= obj

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <string.h>
 
+/* Lock: none; parser runs before threads exist. */
 static inline int	parse_scheduler(t_args *args, const char *str)
 {
 	if (strcmp(str, "fifo") == 0)
@@ -29,6 +30,7 @@ static inline int	parse_scheduler(t_args *args, const char *str)
 	return (0);
 }
 
+/* Lock: none; fills a local parser map. */
 static void	init_fields_map(t_field_desc fields[7])
 {
 	fields[0] = (t_field_desc){offsetof(t_args, number_of_coders),
@@ -47,6 +49,7 @@ static void	init_fields_map(t_field_desc fields[7])
 		sizeof(uint64_t)};
 }
 
+/* Lock: none; reads parsed arguments only. */
 static int	validate_semantic_constraints(const t_args *args)
 {
 	if (args->number_of_coders == 0)
@@ -64,6 +67,7 @@ static int	validate_semantic_constraints(const t_args *args)
 	return (1);
 }
 
+/* Lock: none; parser runs before threads exist. */
 static t_parse_result	parse_values(t_args *args, char *argv[])
 {
 	t_int_result	parsed;
@@ -79,7 +83,8 @@ static t_parse_result	parse_values(t_args *args, char *argv[])
 		parsed = ft_parse_uint(argv[i + 1],
 				fields[i].size == sizeof(uint32_t));
 		if (parsed.status == int_err)
-			return ((t_parse_result){parse_err, {.error_msg = "Error: Int"}});
+			return ((t_parse_result){parse_err,
+				{.error_msg = "Error: expected positive integer arguments"}});
 		if (fields[i].size == sizeof(uint32_t))
 			*(uint32_t *)dest = (uint32_t)parsed.value;
 		else
@@ -88,19 +93,26 @@ static t_parse_result	parse_values(t_args *args, char *argv[])
 	return ((t_parse_result){parse_ok, {.success = *args}});
 }
 
+/* Lock: none; parser entry point. */
 t_parse_result	parse_arguments(int argc, char *argv[])
 {
 	t_parse_result	res;
 
 	if (argc != 9)
-		return ((t_parse_result){parse_err, {.error_msg = "Error: Args"}});
+		return ((t_parse_result){parse_err,
+			{.error_msg = "Error: usage: ./codexion number_of_coders "
+				"time_to_burnout time_to_compile time_to_debug "
+				"time_to_refactor "
+				"number_of_compiles_required dongle_cooldown scheduler"}});
 	res = parse_values(&res.data.success, argv);
 	if (res.status == parse_err)
 		return (res);
 	if (!parse_scheduler(&res.data.success, argv[8]))
-		return ((t_parse_result){parse_err, {.error_msg = "Error: Policy"}});
+		return ((t_parse_result){parse_err,
+			{.error_msg = "Error: scheduler must be exactly fifo or edf"}});
 	if (!validate_semantic_constraints(&res.data.success))
 		return ((t_parse_result){parse_err,
-			{.error_msg = "Error: Invalid Values"}});
+			{.error_msg = "Error: coders and required compiles must be "
+				"greater than zero, and times must fit int64 milliseconds"}});
 	return (res.status = parse_ok, res);
 }

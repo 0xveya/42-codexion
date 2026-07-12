@@ -13,6 +13,7 @@
 #include "../../include/sim.h"
 #include <stdint.h>
 
+/* Lock: none; builds a start error result. */
 static t_start_result	make_start_err(const char *msg)
 {
 	t_start_result	result;
@@ -22,6 +23,7 @@ static t_start_result	make_start_err(const char *msg)
 	return (result);
 }
 
+/* Lock: none; builds a start success result. */
 static t_start_result	start_ok_result(void)
 {
 	t_start_result	result;
@@ -31,6 +33,7 @@ static t_start_result	start_ok_result(void)
 	return (result);
 }
 
+/* Lock: none; creates coder threads before start broadcast. */
 static t_start_result	start_coders(t_app *app)
 {
 	uint32_t	i;
@@ -49,6 +52,7 @@ static t_start_result	start_coders(t_app *app)
 	return (start_ok_result());
 }
 
+/* Lock: none directly; joins threads after set_stop woke them. */
 static void	join_started_threads(t_app *app)
 {
 	while (app->coders_started > 0)
@@ -63,6 +67,7 @@ static void	join_started_threads(t_app *app)
 	}
 }
 
+/* Lock: uses set_stop on startup failure. */
 t_start_result	start_simulation(t_app *app)
 {
 	t_start_result	result;

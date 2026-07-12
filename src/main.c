@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+/* Lock: destroys synchronization objects after all threads joined. */
 static void	cleanup_app(t_app *app)
 {
 	pthread_mutex_destroy(&app->state_mutex);
@@ -28,6 +29,7 @@ static void	cleanup_app(t_app *app)
 	free(app);
 }
 
+/* Lock: none; initializes before worker threads exist. */
 static int	init_app(int argc, char *argv[], t_app **app)
 {
 	t_parse_result	res;
@@ -49,6 +51,7 @@ static int	init_app(int argc, char *argv[], t_app **app)
 	return (0);
 }
 
+/* Lock: none directly; delegates thread lifecycle to simulation helpers. */
 int	main(int argc, char *argv[])
 {
 	t_start_result	start_res;

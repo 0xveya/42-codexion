@@ -13,6 +13,7 @@
 #include "../../include/logging.h"
 #include "../../include/sim.h"
 
+/* Lock: none; computes deterministic dongle order. */
 static void	ordered_pair(t_coder *coder, t_dongle **first, t_dongle **second)
 {
 	if (coder->left < coder->right)
@@ -27,6 +28,7 @@ static void	ordered_pair(t_coder *coder, t_dongle **first, t_dongle **second)
 	}
 }
 
+/* Lock: uses acquire_dongle and release_dongle helpers. */
 static bool	acquire_single_coder_dongle(t_coder *coder)
 {
 	if (!acquire_dongle(coder, coder->left, coder->app->args.dongle_cooldown))
@@ -37,6 +39,7 @@ static bool	acquire_single_coder_dongle(t_coder *coder)
 	return (false);
 }
 
+/* Lock: uses acquire_dongle and releases partial acquisition on failure. */
 bool	acquire_both_dongles(t_coder *coder)
 {
 	t_dongle	*first;
@@ -59,6 +62,7 @@ bool	acquire_both_dongles(t_coder *coder)
 	return (true);
 }
 
+/* Lock: caller must hold dongle mutex while waiting on dongle cond. */
 void	wait_for_dongle(t_dongle *dongle, int64_t time_left)
 {
 	struct timespec	wait_deadline;

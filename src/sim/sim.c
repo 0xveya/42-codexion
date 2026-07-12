@@ -14,17 +14,20 @@
 #include "../../include/logging.h"
 #include "../../include/sim.h"
 
+/* Lock: holds state_mutex while reading compile counters. */
 static int	coder_is_done(t_coder *coder)
 {
 	int	done;
 
 	pthread_mutex_lock(&coder->app->state_mutex);
 	done = (coder->app->args.number_of_compiles_required > 0
-			&& coder->compiles_done >= coder->app->args.number_of_compiles_required);
+			&& coder->compiles_done
+			>= coder->app->args.number_of_compiles_required);
 	pthread_mutex_unlock(&coder->app->state_mutex);
 	return (done);
 }
 
+/* Lock: holds state_mutex while updating compile counters. */
 static bool	finish_compile(t_coder *coder)
 {
 	bool	finished;
@@ -41,6 +44,7 @@ static bool	finish_compile(t_coder *coder)
 	return (finished);
 }
 
+/* Lock: holds state_mutex while updating last compile start. */
 static void	compile_once(t_coder *coder)
 {
 	pthread_mutex_lock(&coder->app->state_mutex);
@@ -51,6 +55,7 @@ static void	compile_once(t_coder *coder)
 	release_both_dongles(coder);
 }
 
+/* Lock: delegates locking to start, stop, acquire, log, and sleep helpers. */
 void	*coder_routine(void *arg)
 {
 	t_coder	*coder;
@@ -77,6 +82,7 @@ void	*coder_routine(void *arg)
 	return (NULL);
 }
 
+/* Lock: caller must hold state_mutex. */
 bool	all_coders_finished(t_app *app)
 {
 	uint32_t	i;
@@ -84,7 +90,8 @@ bool	all_coders_finished(t_app *app)
 	i = 0;
 	while (i < app->args.number_of_coders)
 	{
-		if (app->coders[i].compiles_done < app->args.number_of_compiles_required)
+		if (app->coders[i].compiles_done
+			< app->args.number_of_compiles_required)
 			return (false);
 		i++;
 	}
