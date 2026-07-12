@@ -15,13 +15,14 @@
 /* Lock: none directly; waits for already-started threads to exit. */
 void	join_simulation(t_app *app)
 {
-	uint32_t	i;
-
-	i = 0;
-	while (i < app->args.number_of_coders)
+	while (app->coders_started > 0)
 	{
-		pthread_join(app->coders[i].thread, NULL);
-		i++;
+		app->coders_started--;
+		pthread_join(app->coders[app->coders_started].thread, NULL);
 	}
-	pthread_join(app->monitor_thread, NULL);
+	if (app->monitor_started)
+	{
+		pthread_join(app->monitor_thread, NULL);
+		app->monitor_started = false;
+	}
 }

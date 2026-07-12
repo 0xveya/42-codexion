@@ -145,6 +145,28 @@ deadline for every coder, and broadcasts the start condition.
 Lock contracts are documented directly in the C files with short `Lock:`
 comments above functions.
 
+## Error and Argument Handling
+
+Parser, init, heap, dongle, coder, and thread-start functions return small
+tagged result structs instead of mixing status codes with out-parameters. Each
+result has a status enum and a union payload:
+
+```c
+if (res.status == parse_err)
+    fprintf(stderr, "%s\n", res.data.error_msg);
+```
+
+On success, the same union carries the initialized value. On failure, it carries
+the static error string. That keeps ownership simple: error messages are not
+allocated, and successful allocations are cleaned by the caller or by the local
+failure helper that owns the partially initialized state.
+
+The numeric argument parser uses an offset table as a small fake-reflection
+layer. `init_fields_map()` stores each `t_args` field offset and width, then
+`parse_values()` walks the table and writes either `uint32_t` or `uint64_t` into
+the destination field. The scheduler is parsed separately because it is a tagged
+policy value (`fifo` or `edf`) rather than a number.
+
 ## Logging Notes
 
 The log path avoids `printf` in the hot path. It builds each line into a small

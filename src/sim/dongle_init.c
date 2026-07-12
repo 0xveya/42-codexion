@@ -34,6 +34,7 @@ static t_dongle_init_result	dongle_init_err_result(t_dongle *dongles,
 	{
 		pthread_mutex_destroy(&dongles[i].mutex);
 		pthread_cond_destroy(&dongles[i].cond);
+		free_heap(&dongles[i].queue);
 		i++;
 	}
 	free(dongles);

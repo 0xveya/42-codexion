@@ -41,9 +41,17 @@ static t_start_result	start_coders(t_app *app)
 	i = 0;
 	while (i < app->args.number_of_coders)
 	{
+		app->coders[i].thread = 0;
 		if (pthread_create(&app->coders[i].thread, NULL, coder_routine,
 				&app->coders[i]) != 0)
 		{
+			if (app->coders[i].thread != 0)
+			{
+				app->coders_started++;
+				set_stop(app);
+				pthread_join(app->coders[i].thread, NULL);
+				app->coders_started--;
+			}
 			return (make_start_err("Failed to create coder thread"));
 		}
 		app->coders_started++;
@@ -76,9 +84,12 @@ t_start_result	start_simulation(t_app *app)
 	app->simulation_started = false;
 	app->coders_started = 0;
 	app->monitor_started = false;
+	app->monitor_thread = 0;
 	if (pthread_create(&app->monitor_thread, NULL, monitor_routine, app) != 0)
 	{
 		set_stop(app);
+		if (app->monitor_thread != 0)
+			pthread_join(app->monitor_thread, NULL);
 		return (make_start_err("Failed to create monitor thread"));
 	}
 	app->monitor_started = true;
