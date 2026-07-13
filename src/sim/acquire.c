@@ -13,21 +13,6 @@
 #include "../../include/logging.h"
 #include "../../include/sim.h"
 
-/* Lock: none; computes deterministic dongle order. */
-static void	ordered_pair(t_coder *coder, t_dongle **first, t_dongle **second)
-{
-	if (coder->left < coder->right)
-	{
-		*first = coder->left;
-		*second = coder->right;
-	}
-	else
-	{
-		*first = coder->right;
-		*second = coder->left;
-	}
-}
-
 /* Lock: uses acquire_dongle and release_dongle helpers. */
 static bool	acquire_single_coder_dongle(t_coder *coder)
 {
@@ -42,24 +27,9 @@ static bool	acquire_single_coder_dongle(t_coder *coder)
 /* Lock: uses acquire_dongle and releases partial acquisition on failure. */
 bool	acquire_both_dongles(t_coder *coder)
 {
-	t_dongle	*first;
-	t_dongle	*second;
-	int64_t		cooldown;
-
 	if (coder->left == coder->right)
 		return (acquire_single_coder_dongle(coder));
-	ordered_pair(coder, &first, &second);
-	cooldown = coder->app->args.dongle_cooldown;
-	if (!acquire_dongle(coder, first, cooldown))
-		return (false);
-	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
-	if (!acquire_dongle(coder, second, cooldown))
-	{
-		release_dongle(first);
-		return (false);
-	}
-	log_msg(coder->app, coder->id, MSG_FORK, LEN_FORK);
-	return (true);
+	return (scheduler_acquire_pair(coder));
 }
 
 /* Lock: caller must hold dongle mutex while waiting on dongle cond. */

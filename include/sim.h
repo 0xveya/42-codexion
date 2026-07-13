@@ -63,6 +63,8 @@ typedef struct s_coder
 	t_state					state;
 	int64_t					last_compile_start;
 	uint32_t				compiles_done;
+	t_request				request;
+	bool					waiting;
 	t_dongle				*left;
 	t_dongle				*right;
 	struct s_app			*app;
@@ -82,6 +84,7 @@ typedef struct s_app
 	int64_t					start_time;
 	pthread_t				monitor_thread;
 	const char				*digits;
+	uint64_t				next_sequence;
 	uint32_t				coders_started;
 	bool					monitor_started;
 	pthread_cond_t			start_cond;
@@ -206,6 +209,9 @@ void						build_deadline(struct timespec *ts,
 								uint64_t ms_to_wait);
 bool						request_before(t_app *app, const t_request *a,
 								const t_request *b);
+bool						scheduler_acquire_pair(t_coder *coder);
+bool						scheduler_is_best_ready(t_coder *coder);
+bool						scheduler_pair_ready(t_coder *coder);
 
 void						release_both_dongles(t_coder *coder);
 void						release_dongle(t_dongle *dongle);

@@ -18,8 +18,8 @@ rules:
 
 - one thread per coder;
 - one dongle between each neighboring pair of coders;
-- each dongle is protected by its own mutex and condition variable;
-- each dongle owns a heap-backed wait queue;
+- multi-coder requests are coordinated by one shared scheduler lock;
+- both required dongles are reserved atomically;
 - the scheduler is selected at runtime: `fifo` or `edf`;
 - released dongles observe a cooldown before they can be acquired again;
 - a monitor thread detects burnout and stops the simulation.
@@ -38,10 +38,10 @@ The executable is named `codexion`.
       coder 1 ---+      |      +--- coder N
           \             |             /
            \            v            /
-            +---- dongle queues ----+
+            +---- pair scheduler ---+
 
-Each coder asks its two neighboring dongles for access.
-Each dongle serves its heap according to FIFO or EDF.
+Each coder submits one request for its two neighboring dongles.
+The scheduler reserves both together according to FIFO or EDF.
 ```
 
 ## Instructions
@@ -86,11 +86,19 @@ make tsan
 
 Deadlock prevention:
 
-- Coders acquire dongles through per-dongle queues instead of blindly locking
-  both dongles in arbitrary order.
+- A coder never holds one dongle while waiting for the other. The scheduler
+  checks and reserves both dongles atomically under `state_mutex`.
 - The single-coder case is handled separately, so one coder takes one dongle and
   then burns out cleanly instead of waiting forever for a non-existent second
   dongle.
+
+Work-conserving pair scheduling:
+
+- Only complete two-dongle requests participate in multi-coder scheduling.
+- The best currently eligible request is selected. A request blocked by a busy
+  or cooling dongle does not prevent an independent coder from compiling.
+- This avoids the resource convoy that previously allowed only one coder to
+  start even when two non-neighboring coders could compile concurrently.
 
 Starvation prevention:
 
@@ -125,18 +133,17 @@ Burnout and log shutdown:
 - `simulation_started`;
 - `start_time`;
 - `last_compile_start`;
-- `compiles_done`.
+- `compiles_done`;
+- scheduler requests, dongle availability, and atomic pair reservations.
 
 `log_mutex` serializes writes to stdout. Normal logs first check the stop flag
 under `state_mutex`, then write under `log_mutex`. Burnout logs take the stop
 decision and output ordering seriously: the code sets `simulation_stop`, wakes
 waiters, and writes the burnout line while preventing interleaved output.
 
-Each `t_dongle` has:
-
-- `mutex` for `available`, `released_at`, `next_sequence`, and the heap queue;
-- `cond` for waiters that need to wake on release, cooldown expiry, queue
-  changes, or simulation stop.
+Multi-coder scheduler waiters sleep on `stop_cond` while releasing
+`state_mutex`. Reservations and releases broadcast the condition so another
+eligible pair can be selected. Timed waits handle dongle cooldown expiry.
 
 `start_cond` is the startup gate. Threads are created first, then
 `start_all_threads()` records one shared start timestamp, initializes the first
@@ -197,8 +204,9 @@ main
     monitor_routine
     coder_routine
       acquire_both_dongles
-        acquire_dongle
-          heap_push / heap_pop / heap_remove
+        scheduler_acquire_pair
+          scheduler_pair_ready
+          scheduler_is_best_ready
       compile_once
       release_both_dongles
   join_simulation

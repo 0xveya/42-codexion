@@ -58,6 +58,7 @@ void	start_all_threads(t_app *app)
 {
 	pthread_mutex_lock(&app->state_mutex);
 	app->start_time = now_ms();
+	app->next_sequence = 0;
 	set_all_coder_deadlines(app, app->start_time);
 	app->simulation_started = true;
 	pthread_cond_broadcast(&app->start_cond);

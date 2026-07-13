@@ -21,6 +21,10 @@ static void	init_coder_fields(t_coder *coder, t_app *app, uint32_t id)
 	coder->state = taking_dongle;
 	coder->last_compile_start = 0;
 	coder->compiles_done = 0;
+	coder->request.coder = coder;
+	coder->request.sequence = 0;
+	coder->request.deadline = 0;
+	coder->waiting = false;
 	coder->left = NULL;
 	coder->right = NULL;
 	coder->thread = 0;

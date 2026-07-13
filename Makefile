@@ -48,6 +48,8 @@ SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/sim/monitor.c \
 			  $(SRC_DIR)/sim/release.c \
 			  $(SRC_DIR)/sim/scheduler_compare.c \
+			  $(SRC_DIR)/sim/scheduler_pair.c \
+			  $(SRC_DIR)/sim/scheduler_ready.c \
 			  $(SRC_DIR)/sim/sim.c \
 			  $(SRC_DIR)/sim/sim_cleanup.c \
 			  $(SRC_DIR)/sim/sim_helpers.c \

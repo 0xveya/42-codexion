@@ -25,7 +25,14 @@ void	release_dongle(t_dongle *dongle)
 /* Lock: delegates to release_dongle for each held dongle. */
 void	release_both_dongles(t_coder *coder)
 {
-	release_dongle(coder->left);
-	if (coder->right != coder->left)
-		release_dongle(coder->right);
+	int64_t	released_at;
+
+	released_at = now_ms();
+	pthread_mutex_lock(&coder->app->state_mutex);
+	coder->left->available = true;
+	coder->left->released_at = released_at;
+	coder->right->available = true;
+	coder->right->released_at = released_at;
+	pthread_cond_broadcast(&coder->app->stop_cond);
+	pthread_mutex_unlock(&coder->app->state_mutex);
 }
