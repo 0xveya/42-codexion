@@ -7,10 +7,6 @@ around a shared table and repeatedly need two neighboring USB dongles before
 they can compile. If a coder does not begin compiling before their burnout
 deadline, the simulation stops.
 
-This README is intentionally still a working stub. It contains the sections
-required by the subject and the implementation notes I want to keep visible
-during peer review.
-
 ## Description
 
 The program models the classic shared-resource problem with project-specific
@@ -95,16 +91,22 @@ Deadlock prevention:
 Work-conserving pair scheduling:
 
 - Only complete two-dongle requests participate in multi-coder scheduling.
-- The best currently eligible request is selected. A request blocked by a busy
-  or cooling dongle does not prevent an independent coder from compiling.
-- This avoids the resource convoy that previously allowed only one coder to
-  start even when two non-neighboring coders could compile concurrently.
+- One dispatch pass grants every compatible request that is ready according to
+  the selected policy. A request blocked by a busy or cooling dongle does not
+  prevent an independent coder from compiling.
+- Higher-priority requests protect their available dongles while waiting for a
+  shared dongle to finish cooling. This prevents a later request from repeatedly
+  delaying an earlier overlapping request.
+- Non-neighboring coders can therefore start together when their pairs are
+  available, including when the number of coders is odd.
 
-Starvation prevention:
+Scheduler ordering:
 
-- FIFO uses insertion sequence numbers.
+- FIFO orders overlapping requests by insertion sequence number.
 - EDF compares `last_compile_start + time_to_burnout`, with sequence numbers as
   the deterministic tie-breaker.
+- The scheduler improves fairness but cannot make an infeasible timing setup
+  survive indefinitely.
 
 Cooldown handling:
 
@@ -122,6 +124,7 @@ Startup and shutdown barriers:
 Burnout and log shutdown:
 
 - The monitor checks deadlines and calls `stop_for_burnout()`.
+- Reaching the deadline counts as burnout; acquisition must happen before it.
 - Burnout logging is forced while holding `log_mutex`, so no normal message can
   print after the burnout line.
 
@@ -136,10 +139,11 @@ Burnout and log shutdown:
 - `compiles_done`;
 - scheduler requests, dongle availability, and atomic pair reservations.
 
-`log_mutex` serializes writes to stdout. Normal logs first check the stop flag
-under `state_mutex`, then write under `log_mutex`. Burnout logs take the stop
-decision and output ordering seriously: the code sets `simulation_stop`, wakes
-waiters, and writes the burnout line while preventing interleaved output.
+`log_mutex` serializes writes to stdout. A successful reservation prints both
+dongle lines and the compile line as one uninterrupted group. Other normal logs
+first check the stop flag under `state_mutex`, then write under `log_mutex`.
+Burnout logging sets `simulation_stop`, wakes waiters, and writes the final line
+while preventing interleaved or later output.
 
 Multi-coder scheduler waiters sleep on `stop_cond` while releasing
 `state_mutex`. Reservations and releases broadcast the condition so another
@@ -205,6 +209,7 @@ main
     coder_routine
       acquire_both_dongles
         scheduler_acquire_pair
+          scheduler_dispatch
           scheduler_pair_ready
           scheduler_is_best_ready
       compile_once
@@ -243,10 +248,7 @@ main
 
 AI was used as a review and testing assistant for:
 
-- designing stress and parser test cases;
-- drafting local JSON-driven test fixtures;
-- explaining synchronization choices in documentation.
-- fix anoying norm errors for me.
-
-The code remains my responsibility; generated suggestions were checked against
-the subject and local tests before use.
+- reviewing the scheduler and diagnosing odd-coder priority inversions;
+- designing benchmark, cooldown, timing, race, and leak checks;
+- reviewing synchronization and shutdown behavior;
+- correcting Norminette issues and reviewing this documentation.

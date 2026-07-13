@@ -11,35 +11,36 @@
 /* ************************************************************************** */
 
 #include "../../include/sim.h"
-#include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 
 /* Lock: none; builds an absolute condition timeout. */
 void	build_deadline(struct timespec *ts, uint64_t ms_to_wait)
 {
-	struct timeval	tv;
-	int64_t			target_us;
+	uint64_t	target_ns;
 
-	gettimeofday(&tv, NULL);
-	target_us = tv.tv_usec + (ms_to_wait * 1000);
-	ts->tv_sec = tv.tv_sec + (target_us / 1000000);
-	ts->tv_nsec = (target_us % 1000000) * 1000;
+	clock_gettime(CLOCK_REALTIME, ts);
+	target_ns = (uint64_t)ts->tv_nsec + (ms_to_wait * 1000000);
+	ts->tv_sec += target_ns / 1000000000;
+	ts->tv_nsec = target_ns % 1000000000;
 }
 
-/* Lock: holds state_mutex while timed-waiting on stop_cond. */
+/* Lock: stop checks lock state_mutex; short sleeps keep shutdown responsive. */
 void	good_sleep(t_app *app, uint64_t ms_to_sleep)
 {
-	struct timespec	ts;
+	int64_t	end;
+	int64_t	left;
 
 	if (ms_to_sleep == 0)
 		return ;
-	build_deadline(&ts, ms_to_sleep);
-	pthread_mutex_lock(&app->state_mutex);
-	while (!app->simulation_stop)
+	end = now_ms() + (int64_t)ms_to_sleep;
+	while (!is_stopped(app))
 	{
-		if (pthread_cond_timedwait(&app->stop_cond, &app->state_mutex,
-				&ts) != 0)
+		left = end - now_ms();
+		if (left <= 0)
 			break ;
+		if (left > 1)
+			left = 1;
+		usleep((useconds_t)left * 1000);
 	}
-	pthread_mutex_unlock(&app->state_mutex);
 }

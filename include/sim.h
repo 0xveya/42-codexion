@@ -65,6 +65,7 @@ typedef struct s_coder
 	uint32_t				compiles_done;
 	t_request				request;
 	bool					waiting;
+	bool					granted;
 	t_dongle				*left;
 	t_dongle				*right;
 	struct s_app			*app;
@@ -210,6 +211,7 @@ void						build_deadline(struct timespec *ts,
 bool						request_before(t_app *app, const t_request *a,
 								const t_request *b);
 bool						scheduler_acquire_pair(t_coder *coder);
+void						scheduler_dispatch(t_app *app);
 bool						scheduler_is_best_ready(t_coder *coder);
 bool						scheduler_pair_ready(t_coder *coder);
 

@@ -25,6 +25,7 @@ static void	init_coder_fields(t_coder *coder, t_app *app, uint32_t id)
 	coder->request.sequence = 0;
 	coder->request.deadline = 0;
 	coder->waiting = false;
+	coder->granted = false;
 	coder->left = NULL;
 	coder->right = NULL;
 	coder->thread = 0;

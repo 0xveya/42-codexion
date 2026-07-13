@@ -6,7 +6,7 @@
 /*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
 /*                                               +#+#+#+#+#+   +#+            */
 /*   Created: 2026/07/08 19:41:50 by sfurst           #+#    #+#              */
-/*   Updated: 2026/07/12 01:24:46 by sfurst          ###   ########.fr        */
+/*   Updated: 2026/07/15 22:18:28 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,13 +44,9 @@ static bool	finish_compile(t_coder *coder)
 	return (finished);
 }
 
-/* Lock: holds state_mutex while updating last compile start. */
+/* Lock: delegates logging, sleeping, and dongle release. */
 static void	compile_once(t_coder *coder)
 {
-	pthread_mutex_lock(&coder->app->state_mutex);
-	coder->last_compile_start = now_ms();
-	pthread_mutex_unlock(&coder->app->state_mutex);
-	log_msg(coder->app, coder->id, MSG_COMPILE, LEN_COMPILE);
 	good_sleep(coder->app, coder->app->args.time_to_compile);
 	release_both_dongles(coder);
 }

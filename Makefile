@@ -6,7 +6,7 @@
 #    By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+          #
 #                                                +#+#+#+#+#+   +#+             #
 #    Created: 2026/07/08 19:41:38 by sfurst           #+#    #+#               #
-#    Updated: 2026/07/12 02:22:20 by sfurst          ###   ########.fr         #
+#    Updated: 2026/07/15 21:49:28 by sfurst          ###   ########.fr         #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,12 +15,15 @@ NAME		= codexion
 CC			= cc
 RM			= rm -rf
 
+# Optional libs: no configured optional library directory detected.
+LIBS		=
+
 CFLAGS		= -Wall -Wextra -Werror -pthread
 CPPFLAGS	= -MMD -MP
 LDFLAGS		= -pthread
 LDLIBS		=
 
-DEBUG		?= 1
+DEBUG		?= 0
 
 ifeq ($(DEBUG),1)
 CFLAGS		+= -g3
@@ -48,6 +51,7 @@ SRCS		= $(SRC_DIR)/arg/arg.c \
 			  $(SRC_DIR)/sim/monitor.c \
 			  $(SRC_DIR)/sim/release.c \
 			  $(SRC_DIR)/sim/scheduler_compare.c \
+			  $(SRC_DIR)/sim/scheduler_dispatch.c \
 			  $(SRC_DIR)/sim/scheduler_pair.c \
 			  $(SRC_DIR)/sim/scheduler_ready.c \
 			  $(SRC_DIR)/sim/sim.c \
@@ -66,7 +70,7 @@ DEPS		= $(OBJS:.o=.d)
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c

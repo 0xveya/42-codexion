@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   scheduler_ready.c                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: sfurst <sfurst@student.42vienna.com>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/07/13 00:00:00 by sfurst           #+#    #+#             */
-/*   Updated: 2026/07/13 00:00:00 by sfurst          ###   ########.fr       */
+/*                                                       :::      ::::::::    */
+/*   scheduler_ready.c                                 :+:      :+:    :+:    */
+/*                                                   +:+ +:+         +:+      */
+/*   By: sfurst <sfurst@student.42vienna.com>      #+#  +:+       +#+         */
+/*                                               +#+#+#+#+#+   +#+            */
+/*   Created: 2026/07/13 00:00:00 by sfurst           #+#    #+#              */
+/*   Updated: 2026/07/15 22:28:09 by sfurst          ###   ########.fr        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,21 @@ static bool	dongle_ready(t_coder *coder, t_dongle *dongle)
 /* Lock: caller must hold state_mutex. */
 bool	scheduler_pair_ready(t_coder *coder)
 {
-	return (dongle_ready(coder, coder->left)
-		&& dongle_ready(coder, coder->right));
+	return (dongle_ready(coder, coder->left) && dongle_ready(coder,
+			coder->right));
+}
+
+/* Lock: caller must hold state_mutex. */
+static bool	requests_overlap(t_coder *a, t_coder *b)
+{
+	return (a->left == b->left || a->left == b->right
+		|| a->right == b->left || a->right == b->right);
+}
+
+/* Lock: caller must hold state_mutex. */
+static bool	pair_available(t_coder *coder)
+{
+	return (coder->left->available && coder->right->available);
 }
 
 /* Lock: caller must hold state_mutex. */
@@ -41,7 +54,8 @@ bool	scheduler_is_best_ready(t_coder *coder)
 	{
 		other = &app->coders[i++];
 		if (other != coder && other->waiting
-			&& scheduler_pair_ready(other)
+			&& pair_available(other)
+			&& requests_overlap(other, coder)
 			&& request_before(app, &other->request, &coder->request))
 			return (false);
 	}

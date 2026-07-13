@@ -12,17 +12,15 @@
 
 #include "../../include/logging.h"
 #include "../../include/sim.h"
-#include <bits/types/struct_timeval.h>
-#include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 
-/* Lock: none; reads wall clock. */
+/* Lock: none; reads a clock which cannot jump due to wall-clock changes. */
 int64_t	now_ms(void)
 {
-	struct timeval	current_time;
+	struct timespec	ts;
 
-	gettimeofday(&current_time, NULL);
-	return (current_time.tv_sec * 1000 + current_time.tv_usec / 1000);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ((int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
 }
 
 /* Lock: holds state_mutex while reading simulation_stop. */
