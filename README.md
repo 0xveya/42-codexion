@@ -153,6 +153,35 @@ eligible pair can be selected. Timed waits handle dongle cooldown expiry.
 `start_all_threads()` records one shared start timestamp, initializes the first
 deadline for every coder, and broadcasts the start condition.
 
+### Helgrind Condition-Variable Note
+
+The [Helgrind manual](https://valgrind.org/docs/manual/hg-manual.html)
+documents two relevant limitations:
+
+- condition variables are only partially modeled and can produce false
+  positives when Helgrind cannot observe the complete happens-before chain;
+- checks performed inside the system threading library are unreliable and can
+  occasionally escape Valgrind's normal suppressions.
+
+An intermittent example was reproduced on Ubuntu 22.04 with glibc 2.35 and
+Valgrind 3.18.1:
+
+```text
+pthread_cond_{signal,broadcast}: associated lock is not held by calling thread
+```
+
+In that report, the stack points to glibc's internal
+`__pthread_cond_wait_common`, reached from `wait_for_scheduler()` at the
+`pthread_cond_timedwait()` call. It does not point to an application call to
+`pthread_cond_signal()` or `pthread_cond_broadcast()`, and Helgrind reports no
+possible data race. This specific diagnostic is therefore a known tool false
+positive. All project broadcasts on `stop_cond` occur while `state_mutex` is
+held, and waits use that same mutex.
+
+Do not dismiss a superficially similar report if its stack points directly to
+project code signalling without the associated mutex, or if Helgrind reports a
+`Possible data race`; those require separate investigation.
+
 Lock contracts are documented directly in the C files with short `Lock:`
 comments above functions.
 
